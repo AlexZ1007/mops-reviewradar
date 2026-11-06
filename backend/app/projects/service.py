@@ -139,7 +139,7 @@ def _is_last_owner(db: Session, member: ProjectMember) -> bool:
 def add_member(db: Session, ctx: ProjectContext, email: str, role: ProjectRole) -> MemberOut:
     profile = db.scalar(select(Profile).where(func.lower(Profile.email) == email.strip().lower()))
     if profile is None or not profile.is_active:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "No registered user with this email")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Could not add this member")
     if db.get(ProjectMember, (ctx.project.id, profile.id)) is not None:
         raise _conflict("User is already a member of this project")
     member = ProjectMember(project_id=ctx.project.id, user_id=profile.id, role=role, added_by=ctx.user.id)

@@ -2,6 +2,7 @@ import streamlit as st
 
 import api_client
 import auth
+from roles import label
 
 st.set_page_config(page_title="Projects · ReviewRadar", page_icon="📡")
 auth.require_login()
@@ -36,7 +37,7 @@ for p in projects:
     with st.container(border=True):
         left, right = st.columns([4, 1])
         left.markdown(f"**{p['name']}**  \n{p['description'] or ''}")
-        left.caption(f"Your role: {p['my_role']}")
+        left.caption(f"Your role: {label(p['my_role'])}")
         if right.button("Open", key=f"open_{p['id']}"):
             st.session_state.project_id = p["id"]
             st.switch_page("pages/2_Project.py")

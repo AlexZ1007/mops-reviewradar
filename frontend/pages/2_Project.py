@@ -2,8 +2,7 @@ import streamlit as st
 
 import api_client
 import auth
-
-ROLES = ["owner", "analyst", "product_manager", "viewer"]
+from roles import ROLES, label
 
 st.set_page_config(page_title="Project · ReviewRadar", page_icon="📡")
 auth.require_login()
@@ -40,7 +39,7 @@ def on_role_change(user_id: str, old_role: str) -> None:
     key = f"role_{user_id}"
     try:
         api_client.patch(f"/projects/{project_id}/members/{user_id}", {"role": st.session_state[key]})
-        st.toast(f"Role changed to {st.session_state[key]}")
+        st.toast(f"Role changed to {label(st.session_state[key])}")
     except api_client.ApiError as e:
         st.session_state[key] = old_role  # put the dropdown back
         st.session_state.flash_error = e.detail
@@ -55,7 +54,7 @@ if st.button("← Projects"):
 
 st.title(project["name"])
 st.write(project["description"] or "")
-st.caption(f"Your role: {project['my_role']}" + (" · archived" if archived else ""))
+st.caption(f"Your role: {label(project['my_role'])}" + (" · archived" if archived else ""))
 
 # Project settings (owner) -------------------------------------------------------
 if can_manage and not archived:
@@ -80,9 +79,15 @@ if can_manage and not archived:
     with st.form("add_member", clear_on_submit=True):
         c1, c2, c3 = st.columns([3, 2, 1], vertical_alignment="bottom")
         email = c1.text_input("Email of a registered user")
-        role = c2.selectbox("Role", ROLES, index=3)
+        role = c2.selectbox("Role", ROLES, index=3, format_func=label)
         if c3.form_submit_button("Add"):
-            run(lambda: api_client.post(f"/projects/{project_id}/members", {"email": email, "role": role}), f"Added {email}")
+            try:
+                api_client.post(f"/projects/{project_id}/members", {"email": email.strip(), "role": role})
+                st.toast(f"Added {email.strip()}")
+                st.rerun()
+            except api_client.ApiError as e:
+                # Don't reveal whether an email has an account.
+                st.error(e.detail if e.status == 409 else "Couldn't add this person. Check the email address and try again.")
 
 def display_name(m: dict) -> str:
     return m["full_name"] or m["email"]
@@ -123,11 +128,11 @@ for m in members:
             key = f"role_{m['user_id']}"
             st.session_state[key] = m["role"]  # always show the server's value
             c2.selectbox(
-                "Role", ROLES, key=key, label_visibility="collapsed",
+                "Role", ROLES, key=key, label_visibility="collapsed", format_func=label,
                 on_change=on_role_change, args=(m["user_id"], m["role"]),
             )
         else:
-            c2.write(m["role"])
+            c2.write(label(m["role"]))
         if archived:
             continue
         if is_me:

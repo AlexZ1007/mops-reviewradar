@@ -1,0 +1,3 @@
+[client]
+# Navigation happens through in-page buttons; hide the auto-generated page menu.
+showSidebarNavigation = false
