@@ -84,11 +84,11 @@ Migrations are managed with the **Supabase CLI** (plain SQL), not Alembic, becau
 `.env.example` (values from Supabase Dashboard → Project Settings → API / Database, or `supabase status` locally):
 
 ```
-SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_URL=http://127.0.0.1:64321
 SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
-DATABASE_URL=postgresql+psycopg://postgres:postgres@127.0.0.1:54322/postgres
-API_BASE_URL=http://localhost:8000
+DATABASE_URL=postgresql+psycopg://postgres:postgres@127.0.0.1:64322/postgres
+API_BASE_URL=http://127.0.0.1:8000
 ADMIN_EMAIL=admin@reviewradar.local
 ```
 
@@ -107,23 +107,34 @@ ADMIN_EMAIL=admin@reviewradar.local
 9. **Frontend** – sign in / sign up / sign out with `supabase-py`, session in `st.session_state`, projects list, members page.
 10. **Tests + CI** – unit/API tests with dependency overrides (no Supabase needed); GitHub Actions runs `pytest --cov` on every PR. Optional integration job with `supabase start`.
 
-Run locally:
+Run locally (Python deps are managed with [uv](https://docs.astral.sh/uv/)):
 
 ```bash
-supabase start
+supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,edge-runtime,supavisor,postgres-meta,mailpit
 ```
 
 ```bash
 supabase db reset
 ```
 
+Copy `.env.example` to `.env` and fill the keys from `supabase status -o env` (`PUBLISHABLE_KEY`, `SECRET_KEY`, `JWT_SECRET`).
+
 ```bash
-cd backend && uvicorn app.main:app --reload
+cd backend && uv run uvicorn app.main:app --reload
 ```
 
 ```bash
-cd frontend && streamlit run Home.py
+cd frontend && uv run streamlit run Home.py
 ```
+
+```bash
+cd backend && uv run pytest --cov=app
+```
+
+Notes:
+- Local Supabase ports are moved to `643xx` (`supabase/config.toml`) because Windows/Hyper-V reserves the default `5432x` range on some machines (`netsh int ipv4 show excludedportrange protocol=tcp`).
+- Use `127.0.0.1`, not `localhost`, for `API_BASE_URL`: on Windows `localhost` tries IPv6 first and adds ~2 s to every API call.
+- The local Supabase CLI issues ES256 tokens, verified through JWKS like the cloud project. `SUPABASE_JWT_SECRET` is only a fallback for legacy HS256 projects.
 
 ## 5. Task breakdown (Sprint focus)
 
