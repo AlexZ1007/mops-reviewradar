@@ -6,8 +6,9 @@ import ui
 st.set_page_config(page_title="Sign in · ReviewRadar", page_icon=":material/radar:", layout="centered")
 ui.styles()
 
-if auth.access_token():
+if auth.access_token():  # also restores the session from the refresh cookie after a reload
     st.switch_page("pages/1_Projects.py")
+auth.sync_cookie()  # clears the cookie after sign-out or a revoked session
 
 st.html(
     """

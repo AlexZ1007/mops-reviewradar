@@ -116,7 +116,7 @@ for p in shown:
         main, role = st.columns([5, 1], vertical_alignment="center")
         with main, st.container(gap=None):
             with st.container(key=f"rr-open-{p['id']}"):
-                if st.button(p["name"], type="tertiary", help="Open project"):
+                if st.button(p["name"], type="tertiary"):
                     ui.open_project(p["id"])
             st.html(
                 f"<div class='rr-sub'>{escape(p['description'])}</div>" if p["description"]

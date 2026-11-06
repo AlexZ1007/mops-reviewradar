@@ -15,6 +15,29 @@ class ProfileOut(BaseModel):
     is_active: bool
 
 
+class LoginIn(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class SignUpIn(LoginIn):
+    full_name: str = Field(min_length=1, max_length=120)
+
+
+class RefreshIn(BaseModel):
+    refresh_token: str = Field(min_length=1, max_length=512)
+
+
+class TokenOut(BaseModel):
+    """Supabase session: JWT access token + single-use refresh token."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    expires_at: int  # unix seconds
+
+
 class ProfileUpdate(BaseModel):
     full_name: str = Field(max_length=120)
 

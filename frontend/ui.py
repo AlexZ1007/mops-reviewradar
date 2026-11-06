@@ -29,6 +29,7 @@ CSS = f"""
 html {{ scrollbar-color: #cfcac5 transparent; caret-color: var(--pencil); }}
 :focus-visible {{ outline: 2px solid var(--pencil) !important; outline-offset: 2px; }}
 header[data-testid="stHeader"] {{ display: none; }}
+[data-testid="InputInstructions"] {{ display: none; }}  /* the "Press Enter to submit form" hint */
 .block-container, [data-testid="stMainBlockContainer"] {{ max-width: 1040px; padding: 0 2rem 5rem; }}
 h1, h2, h3 {{ font-family: var(--serif) !important; letter-spacing: -0.015em; text-wrap: balance; }}
 h1 {{ font-size: 2.5rem !important; padding: 0 !important; }}
@@ -67,7 +68,7 @@ h3 {{ font-size: 1.15rem !important; padding: 0 !important; }}
 .rr-section {{ font-family: var(--serif); font-size: 1.2rem; font-weight: 600; margin: 2.25rem 0 .25rem; color: var(--ink); }}
 
 /* Ruled rows. Every row leaves a margin on the left; the pencil ring lives there. */
-[class*="st-key-rr-row"] {{ border-bottom: 1px solid var(--rule); padding: 14px 0 14px 30px; position: relative; }}
+[class*="st-key-rr-row"] {{ border-bottom: 1px solid var(--rule); padding: 14px 18px 14px 30px; position: relative; }}
 [class*="st-key-rr-row"]:hover {{ background: linear-gradient(90deg, transparent, var(--tint) 30px); }}
 [class*="st-key-rr-row-mark"]::before {{
   content: ""; position: absolute; left: 2px; top: 18px; width: 18px; height: 18px;
@@ -93,7 +94,12 @@ h3 {{ font-size: 1.15rem !important; padding: 0 !important; }}
 /* Project names are the link: serif, no button chrome. */
 [class*="st-key-rr-open"] button {{ padding: 0 !important; min-height: 0 !important; justify-content: flex-start; }}
 [class*="st-key-rr-open"] button p {{ font-family: var(--serif); font-size: 1.15rem; font-weight: 600; color: var(--ink); text-align: left; }}
-[class*="st-key-rr-open"] button:hover p {{ color: var(--pencil); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }}
+[class*="st-key-rr-row"]:hover [class*="st-key-rr-open"] button p {{ color: var(--pencil); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }}
+/* The whole row opens the project: the name's button stretches an invisible hit area over the row. */
+[class*="st-key-rr-row"]:has([class*="st-key-rr-open"]) {{ cursor: pointer; }}
+[class*="st-key-rr-row"]:has([class*="st-key-rr-open"]) :is([data-testid="stVerticalBlock"], [data-testid="stHorizontalBlock"],
+  [data-testid="stColumn"], [data-testid="stElementContainer"], [data-testid="stButton"], [class*="st-key-rr-open"]) {{ position: static; }}
+[class*="st-key-rr-open"] button::after {{ content: ""; position: absolute; inset: 0; z-index: 1; }}
 
 /* Tabs: underline in pencil, no grey bar. */
 [data-baseweb="tab-highlight"] {{ background-color: var(--pencil) !important; }}

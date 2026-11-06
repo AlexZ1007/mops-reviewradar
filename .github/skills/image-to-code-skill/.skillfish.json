@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "image-to-code-skill",
+  "owner": "nexu-io",
+  "repo": "open-design",
+  "path": "skills/image-to-code-skill",
+  "branch": "main",
+  "sha": "9183a4baa1a889eb148c89794d2aa0d34209c148",
+  "source": "manual"
+}
