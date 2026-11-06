@@ -7,11 +7,8 @@ from roles import label
 st.set_page_config(page_title="Projects · ReviewRadar", page_icon="📡")
 auth.require_login()
 
-header, logout = st.columns([4, 1])
-header.title("Projects")
-if logout.button("Sign out"):
-    auth.sign_out()
-    st.switch_page("Home.py")
+auth.nav_header()
+st.title("Projects")
 
 with st.expander("New project"):
     with st.form("create_project", clear_on_submit=True):

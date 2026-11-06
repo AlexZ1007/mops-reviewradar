@@ -6,6 +6,7 @@ from roles import ROLES, label
 
 st.set_page_config(page_title="Project · ReviewRadar", page_icon="📡")
 auth.require_login()
+auth.nav_header()
 
 project_id = st.session_state.get("project_id")
 if project_id is None:
@@ -18,12 +19,12 @@ try:
     me = api_client.get("/me")
     project = api_client.get(f"/projects/{project_id}")
     members = api_client.get(f"/projects/{project_id}/members")
+    can_manage = project["my_role"] == "owner"
+    archived = project["archived_at"] is not None
+    invitations = api_client.get(f"/projects/{project_id}/invitations") if can_manage and not archived else []
 except api_client.ApiError as e:
     st.error(e.detail)
     st.stop()
-
-can_manage = project["my_role"] == "owner"
-archived = project["archived_at"] is not None
 
 
 def run(call, success: str) -> None:
@@ -45,12 +46,11 @@ def on_role_change(user_id: str, old_role: str) -> None:
         st.session_state.flash_error = e.detail
 
 
+if "flash" in st.session_state:
+    st.toast(st.session_state.pop("flash"))
 if "flash_error" in st.session_state:
     st.error(st.session_state.pop("flash_error"))
 
-
-if st.button("← Projects"):
-    st.switch_page("pages/1_Projects.py")
 
 st.title(project["name"])
 st.write(project["description"] or "")
@@ -76,18 +76,30 @@ if can_manage and not archived:
 st.subheader("Members")
 
 if can_manage and not archived:
-    with st.form("add_member", clear_on_submit=True):
+    with st.form("invite_member", clear_on_submit=True):
         c1, c2, c3 = st.columns([3, 2, 1], vertical_alignment="bottom")
-        email = c1.text_input("Email of a registered user")
+        email = c1.text_input("Invite by email")
         role = c2.selectbox("Role", ROLES, index=3, format_func=label)
-        if c3.form_submit_button("Add"):
+        if c3.form_submit_button("Invite"):
             try:
-                api_client.post(f"/projects/{project_id}/members", {"email": email.strip(), "role": role})
-                st.toast(f"Added {email.strip()}")
+                api_client.post(f"/projects/{project_id}/invitations", {"email": email.strip(), "role": role})
+                st.toast(f"Invitation sent to {email.strip()}")
                 st.rerun()
             except api_client.ApiError as e:
-                # Don't reveal whether an email has an account.
-                st.error(e.detail if e.status == 409 else "Couldn't add this person. Check the email address and try again.")
+                st.error(e.detail if e.status in (409, 422) else "Couldn't send the invitation. Try again.")
+
+    if invitations:
+        st.markdown("**Pending invitations**")
+        for inv in invitations:
+            with st.container(border=True):
+                c1, c2, c3 = st.columns([3, 2, 1], vertical_alignment="center")
+                expired = inv["status"] == "expired"
+                when = "expired" if expired else f"expires {inv['expires_at'][:10]}"
+                c1.markdown(f"{inv['email']}  \n:gray[invited by {inv['invited_by_name'] or 'unknown'} · {when}]")
+                c2.write(label(inv["role"]))
+                if c3.button("Revoke", key=f"revoke_{inv['id']}"):
+                    run(lambda: api_client.delete(f"/projects/{project_id}/invitations/{inv['id']}"), "Invitation revoked")
+
 
 def display_name(m: dict) -> str:
     return m["full_name"] or m["email"]

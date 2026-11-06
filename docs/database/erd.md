@@ -47,6 +47,37 @@ erDiagram
     }
 ```
 
+## Invitations and notifications
+
+See [invite-system.md](../invite-system.md).
+
+```mermaid
+erDiagram
+    PROJECTS ||--o{ PROJECT_INVITATIONS : "invites"
+    PROFILES ||--o{ PROJECT_INVITATIONS : "invited_by"
+    PROFILES ||--o{ NOTIFICATIONS : "receives"
+    PROJECT_INVITATIONS |o--o{ NOTIFICATIONS : "about"
+
+    PROJECT_INVITATIONS {
+        bigint id PK
+        bigint project_id FK
+        citext email
+        project_role role
+        invitation_status status
+        uuid invited_by FK
+        timestamptz expires_at
+    }
+    NOTIFICATIONS {
+        bigint id PK
+        uuid user_id FK
+        varchar type
+        bigint project_id FK
+        bigint invitation_id FK
+        jsonb payload
+        timestamptz read_at
+    }
+```
+
 ## Full model
 
 ```mermaid
@@ -91,4 +122,6 @@ erDiagram
 | `review_sentiments.predicted_label` + `final_label` | Keeps the AI estimate and the human correction separately (NFR05). |
 | `projects.archived_at` soft delete | Project data is kept for audit; archived projects are hidden. |
 | `audit_log` | Role changes and project actions are traceable (story #3, FR15). |
+| Invitations, not direct adds | Nobody becomes a member without accepting; invitations are keyed by email so people without an account can be invited. |
+| Generic `notifications` table | One inbox for invitations now and later events (analysis finished, issue assigned). |
 | Tables added per story | Sprint 1 migration contains only `profiles`, `projects`, `project_members`, `audit_log`. |

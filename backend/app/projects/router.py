@@ -7,7 +7,7 @@ from app.auth.dependencies import ProjectContext, get_current_user, require_perm
 from app.db import get_db
 from app.models import Profile
 from app.projects import service
-from app.schemas import MemberCreate, MemberOut, MemberUpdate, ProjectCreate, ProjectOut, ProjectUpdate
+from app.schemas import MemberOut, MemberUpdate, ProjectCreate, ProjectOut, ProjectUpdate
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -55,15 +55,6 @@ def list_members(
     db: Session = Depends(get_db),
 ) -> list[MemberOut]:
     return service.list_members(db, ctx)
-
-
-@router.post("/{project_id}/members", response_model=MemberOut, status_code=status.HTTP_201_CREATED)
-def add_member(
-    data: MemberCreate,
-    ctx: ProjectContext = Depends(require_permission("members.manage")),
-    db: Session = Depends(get_db),
-) -> MemberOut:
-    return service.add_member(db, ctx, data.email, data.role)
 
 
 @router.patch("/{project_id}/members/{user_id}", response_model=MemberOut)

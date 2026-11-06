@@ -55,7 +55,7 @@ PERMISSIONS = {
 
 1. Creating a project inserts the project and an `owner` membership for the creator in **one transaction**.
 2. A project always has **at least one owner**. Demoting the last owner returns `409 Conflict` (make another member owner first).
-3. Only users who already signed up (have a `profiles` row) and are active can be added as members, looked up by email.
+3. Members join through **invitations**: an owner invites an email with a role, and the invitee accepts in the Notifications tab. See [invite-system.md](invite-system.md).
 4. A user cannot be added twice to the same project (`409`).
 5. Any member can leave a project. When the **last owner leaves**, the member who joined the project first (oldest `project_members.created_at`) is promoted to `owner` in the same transaction, logged as `member.role_changed` with `reason: "last_owner_left"`. If the owner is the only member, leaving returns `409`; archive the project instead. The UI shows a warning naming the member who will be promoted before the owner confirms.
 6. Non-members get `404 Not Found` for a project (does not reveal it exists). Members without the needed permission get `403 Forbidden`.
@@ -179,7 +179,6 @@ Sign-up, sign-in, sign-out and password reset are **Supabase Auth** calls from S
 | PATCH | `/projects/{id}` | `project.update` | #2 |
 | DELETE | `/projects/{id}` | `project.update` (archives) | #2 |
 | GET | `/projects/{id}/members` | `project.read` | #3 |
-| POST | `/projects/{id}/members` | `members.manage` | #3 |
 | PATCH | `/projects/{id}/members/{user_id}` | `members.manage` | #3 |
 | DELETE | `/projects/{id}/members/{user_id}` | `members.manage` (or self, to leave; see rule 5) | #3 |
 
@@ -215,7 +214,7 @@ Sign-up, sign-in, sign-out and password reset are **Supabase Auth** calls from S
 - The project list shows only projects the user is a member of.
 
 **#3 Manage project roles**
-- An owner can add a registered user by email with a role, change a member's role, and remove a member.
+- An owner can invite someone by email with a role (they join after accepting, see [invite-system.md](invite-system.md#10-acceptance-criteria)), change a member's role, and remove a member.
 - Non-owners do not see member management controls and get `403` from the API.
 - The last owner cannot be demoted.
 - When the last owner leaves, they first see a warning naming the member who will become owner; on confirm, the member who joined first is promoted. The only member of a project cannot leave it.

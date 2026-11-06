@@ -94,3 +94,49 @@ class AuditLog(Base):
     target_id: Mapped[int | None] = mapped_column(BigId)
     details: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class InvitationStatus(str, enum.Enum):
+    pending = "pending"
+    accepted = "accepted"
+    declined = "declined"
+    revoked = "revoked"
+    expired = "expired"
+
+
+class ProjectInvitation(Base):
+    __tablename__ = "project_invitations"
+
+    id: Mapped[int] = mapped_column(BigId, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(BigId, ForeignKey("projects.id", ondelete="CASCADE"))
+    email: Mapped[str] = mapped_column(String(320))  # CITEXT in Postgres
+    role: Mapped[ProjectRole] = mapped_column(Enum(ProjectRole, name="project_role", create_type=False))
+    status: Mapped[InvitationStatus] = mapped_column(
+        Enum(InvitationStatus, name="invitation_status", create_type=False), default=InvitationStatus.pending
+    )
+    invited_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("profiles.id", ondelete="SET NULL"))
+    responded_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("profiles.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    project: Mapped[Project] = relationship(lazy="joined")
+    inviter: Mapped[Profile | None] = relationship(foreign_keys=[invited_by], lazy="joined")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(BigId, primary_key=True, autoincrement=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
+    type: Mapped[str] = mapped_column(String(40))
+    project_id: Mapped[int | None] = mapped_column(BigId, ForeignKey("projects.id", ondelete="CASCADE"))
+    invitation_id: Mapped[int | None] = mapped_column(
+        BigId, ForeignKey("project_invitations.id", ondelete="CASCADE")
+    )
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("profiles.id", ondelete="SET NULL"))
+    payload: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    invitation: Mapped[ProjectInvitation | None] = relationship(lazy="joined")

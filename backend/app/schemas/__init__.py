@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models import ProjectRole
+from app.models import InvitationStatus, ProjectRole
 
 
 class ProfileOut(BaseModel):
@@ -41,9 +41,8 @@ class ProjectOut(BaseModel):
     my_role: ProjectRole | None = None
 
 
-class MemberCreate(BaseModel):
-    # Basic shape check only: the address must match an existing profile, which Supabase
-    # already validated at sign-up. EmailStr would reject special-use domains like .local.
+class InvitationCreate(BaseModel):
+    # Basic shape check only. EmailStr would reject special-use domains like .local.
     email: str = Field(pattern=r"^[^@\s]+@[^@\s]+$", max_length=320)
     role: ProjectRole
 
@@ -58,3 +57,31 @@ class MemberOut(BaseModel):
     full_name: str
     role: ProjectRole
     joined_at: datetime
+
+
+class InvitationOut(BaseModel):
+    id: int
+    project_id: int
+    email: str
+    role: ProjectRole
+    status: InvitationStatus  # effective: a pending invitation past expires_at is reported as expired
+    invited_by: uuid.UUID | None
+    invited_by_name: str | None
+    created_at: datetime
+    expires_at: datetime
+
+
+class NotificationOut(BaseModel):
+    id: int
+    type: str
+    project_id: int | None
+    invitation_id: int | None
+    invitation_status: InvitationStatus | None  # live status, so stale Accept buttons can be hidden
+    actor_id: uuid.UUID | None
+    payload: dict
+    read_at: datetime | None
+    created_at: datetime
+
+
+class UnreadCount(BaseModel):
+    count: int
