@@ -1,3 +1,27 @@
 [client]
-# Navigation happens through in-page buttons; hide the auto-generated page menu.
+# Navigation happens through the app's own top bar; hide the auto-generated page menu.
 showSidebarNavigation = false
+toolbarMode = "minimal"
+
+[server]
+runOnSave = true
+
+[theme]
+base = "light"
+primaryColor = "#b0122b"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f6f5f3"
+textColor = "#1a1a1a"
+borderColor = "#e7e4e0"
+linkColor = "#b0122b"
+linkUnderline = false
+redColor = "#b0122b"
+greenColor = "#2f7a4f"
+grayColor = "#5f5b57"
+font = "Hanken Grotesk:https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
+headingFont = "Source Serif 4:https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap"
+headingFontWeights = [600, 600, 600, 600, 600, 600]
+baseFontSize = 15
+baseRadius = "6px"
+buttonRadius = "6px"
+showWidgetBorder = true

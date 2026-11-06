@@ -68,21 +68,3 @@ def require_login() -> None:
     if access_token() is None:
         st.switch_page("Home.py")
 
-
-def nav_header() -> None:
-    """Top bar on every signed-in page: Projects, Notifications (with unread badge), Sign out."""
-    import api_client  # imported here: api_client imports this module
-
-    try:
-        unread = api_client.get("/notifications/unread-count")["count"]
-    except api_client.ApiError:
-        unread = 0
-    c1, c2, _, c3 = st.columns([1.2, 1.8, 2, 1])
-    if c1.button("📁 Projects", width="stretch"):
-        st.switch_page("pages/1_Projects.py")
-    bell = f"🔔 Notifications ({unread})" if unread else "🔔 Notifications"
-    if c2.button(bell, width="stretch", type="primary" if unread else "secondary"):
-        st.switch_page("pages/3_Notifications.py")
-    if c3.button("Sign out", width="stretch"):
-        sign_out()
-        st.switch_page("Home.py")

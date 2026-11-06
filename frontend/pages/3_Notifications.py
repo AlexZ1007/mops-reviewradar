@@ -1,73 +1,62 @@
-from datetime import UTC, datetime
+from html import escape
 
 import streamlit as st
 
 import api_client
-import auth
+import ui
 from roles import label
 
-st.set_page_config(page_title="Notifications · ReviewRadar", page_icon="📡")
-auth.require_login()
-auth.nav_header()
-
-if "flash" in st.session_state:
-    st.toast(st.session_state.pop("flash"))
-if "flash_error" in st.session_state:
-    st.error(st.session_state.pop("flash_error"))
-
-title, mark_all = st.columns([4, 1.4], vertical_alignment="bottom")
-title.title("Notifications")
-if mark_all.button("Mark all as read", width="stretch"):
-    try:
-        api_client.post("/notifications/read-all", {})
-        st.rerun()
-    except api_client.ApiError as e:
-        st.error(e.detail)
-
-view = st.segmented_control("Show", ["Unread", "All"], default="Unread", label_visibility="collapsed") or "Unread"
+ui.page("Inbox")
+ui.top_bar("inbox")
+ui.flash()
 
 try:
-    items = api_client.get("/notifications" + ("?unread=true" if view == "Unread" else ""))
+    everything = api_client.get("/notifications")
 except api_client.ApiError as e:
     st.error(e.detail)
     st.stop()
 
+unread_count = sum(1 for n in everything if n["read_at"] is None)
 
-def ago(ts: str) -> str:
-    when = datetime.fromisoformat(ts)
-    when = when if when.tzinfo else when.replace(tzinfo=UTC)
-    seconds = (datetime.now(UTC) - when).total_seconds()
-    for unit, size in (("day", 86400), ("hour", 3600), ("minute", 60)):
-        if seconds >= size:
-            n = int(seconds // size)
-            return f"{n} {unit}{'s' if n > 1 else ''} ago"
-    return "just now"
+left, right = st.columns([3, 1.3], vertical_alignment="bottom")
+with left:
+    ui.head("Inbox", f"<span class='rr-num'>{unread_count}</span> unread" if unread_count else "You're all caught up.")
+with right, st.container(horizontal=True, horizontal_alignment="right"):
+    if st.button("Mark all as read", icon=":material/done_all:", disabled=not unread_count):
+        try:
+            api_client.post("/notifications/read-all", {})
+        except api_client.ApiError as e:
+            st.session_state.flash_error = e.detail
+        st.rerun()
+
+st.space("small")
+view = st.segmented_control(
+    "Show", ["Unread", "All"], default="Unread", required=True, label_visibility="collapsed", key="inbox_view",
+    format_func=lambda v: f"Unread  {unread_count}" if v == "Unread" else f"All  {len(everything)}",
+)
+items = [n for n in everything if n["read_at"] is None] if view == "Unread" else everything
 
 
 def describe(n: dict) -> str:
     p = n["payload"]
-    who, project, role = p.get("actor_name") or "Someone", p.get("project_name", "a project"), label(p.get("role"))
+    who = f"<b>{escape(p.get('actor_name') or 'Someone')}</b>"
+    project = f"<b>{escape(p.get('project_name', 'a project'))}</b>"
     match n["type"]:
         case "invitation":
-            return f"**{who}** invited you to join **{project}** as {role}"
+            return f"{who} invited you to join {project} as {escape(label(p.get('role')))}"
         case "invitation.accepted":
-            return f"**{who}** accepted your invitation to **{project}**"
+            return f"{who} accepted your invitation to {project}"
         case "invitation.declined":
-            return f"**{who}** declined your invitation to **{project}**"
-    return f"{n['type']} · {project}"
+            return f"{who} declined your invitation to {project}"
+    return f"{escape(n['type'])} · {project}"
 
 
 STATUS_NOTE = {
-    "accepted": "You accepted this invitation.",
-    "declined": "You declined this invitation.",
-    "revoked": "This invitation is no longer available.",
-    "expired": "This invitation has expired.",
+    "accepted": "You accepted",
+    "declined": "You declined",
+    "revoked": "No longer available",
+    "expired": "Expired",
 }
-
-
-def open_project(project_id: int) -> None:
-    st.session_state.project_id = project_id
-    st.switch_page("pages/2_Project.py")
 
 
 def mark_read(n: dict) -> None:
@@ -75,45 +64,37 @@ def mark_read(n: dict) -> None:
         api_client.post(f"/notifications/{n['id']}/read", {})
 
 
-def answer(n: dict, action: str) -> None:
-    try:
-        result = api_client.post(f"/invitations/{n['invitation_id']}/{action}", {})
-    except api_client.ApiError as e:
-        st.session_state.flash_error = e.detail
-        st.rerun()
-    if action == "accept":
-        st.session_state.flash = f"You joined {result['name']}"
-        open_project(result["id"])
-    st.session_state.flash = "Invitation declined"
-    st.rerun()
-
-
 if not items:
-    st.info("You're all caught up." if view == "Unread" else "No notifications yet.")
+    st.html(
+        "<div class='rr-empty'><div class='rr-title'>"
+        + ("Nothing new" if view == "Unread" else "No notifications yet")
+        + "</div><div class='rr-sub'>Invitations to projects and answers to the invitations you send show up here.</div></div>"
+    )
+
+# Invitations waiting for an answer go first.
+items = sorted(items, key=lambda n: not (n["type"] == "invitation" and n["invitation_status"] == "pending"))
 
 for n in items:
     unread = n["read_at"] is None
     status = n["invitation_status"]
     actionable = n["type"] == "invitation" and status == "pending"
-    with st.container(border=True):
-        text, buttons = st.columns([3, 1.6], vertical_alignment="center")
-        text.markdown(("🔵 " if unread else "") + describe(n))
-        caption = ago(n["created_at"])
-        if n["type"] == "invitation" and status in STATUS_NOTE:
-            caption += " · " + STATUS_NOTE[status]
-        text.caption(caption)
-
-        if actionable:
-            b1, b2 = buttons.columns(2)
-            if b1.button("Accept", key=f"acc_{n['id']}", type="primary", width="stretch"):
-                answer(n, "accept")
-            if b2.button("Decline", key=f"dec_{n['id']}", width="stretch"):
-                answer(n, "decline")
-        elif n["project_id"] and (n["type"] == "invitation.accepted" or status == "accepted"):
-            if buttons.button("Open project", key=f"open_{n['id']}", width="stretch"):
-                mark_read(n)
-                open_project(n["project_id"])
-        if unread and not actionable:
-            if buttons.button("Mark as read", key=f"read_{n['id']}", width="stretch"):
-                mark_read(n)
-                st.rerun()
+    note = ui.ago(n["created_at"])
+    if n["type"] == "invitation" and status in STATUS_NOTE:
+        note += " · " + STATUS_NOTE[status]
+    with st.container(key=f"rr-row-{'mark-' if unread or actionable else ''}n-{n['id']}"):
+        text, actions = st.columns([3, 1.6], vertical_alignment="center")
+        text.html(f"<div class='rr-line'>{describe(n)}</div><div class='rr-sub'>{note}</div>")
+        with actions, st.container(horizontal=True, horizontal_alignment="right"):
+            if actionable:
+                if st.button("Decline", key=f"dec_{n['id']}"):
+                    ui.answer_invitation(n["invitation_id"], "decline")
+                if st.button("Accept", key=f"acc_{n['id']}", type="primary", icon=":material/check:"):
+                    ui.answer_invitation(n["invitation_id"], "accept")
+            elif n["project_id"] and (n["type"] == "invitation.accepted" or status == "accepted"):
+                if st.button("Open project", key=f"open_{n['id']}", icon=":material/arrow_forward:", icon_position="right"):
+                    mark_read(n)
+                    ui.open_project(n["project_id"])
+            if unread and not actionable:
+                if st.button("", key=f"read_{n['id']}", type="tertiary", icon=":material/check:", help="Mark as read"):
+                    mark_read(n)
+                    st.rerun()
