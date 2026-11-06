@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReviewRadar · Checkpoint 2 — Project Progress</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9.5' fill='none' stroke='%231a1a1a' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='5' fill='none' stroke='%231a1a1a' stroke-width='1.6'/%3E%3Cpath d='M12 12 L19 5' stroke='%23b0122b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='12' r='1.8' fill='%23b0122b'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Shared symbols -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.5" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>
+      <circle cx="12" cy="12" r="5" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>
+      <path d="M12 12 L19 5" stroke="#b0122b" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="1.8" fill="#b0122b"/>
+    </symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4.5 19.5l1.2-3.6A8 8 0 1 1 8.4 18.6z"/><path d="M9 10.5h6M9 13.5h4"/></symbol>
+    <symbol id="i-headset" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5"/></symbol>
+    <symbol id="i-userplus" viewBox="0 0 24 24"><circle cx="10" cy="8" r="4"/><path d="M3 20c.4-3.6 3.3-6 7-6 2 0 3.7.6 5 1.8"/><path d="M19 13v7M15.5 16.5h7"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4.5"/><path d="M11.2 12.3L20 3.5M16.5 7l3 3M14 9.5l2 2"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.6-3.4 8.1-8 9-4.6-.9-8-4.4-8-9V6z"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.8 1.8H4.2z"/><path d="M10 21h4"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
+    <symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="4" height="10" rx=".6"/><rect x="13.5" y="6.5" width="4" height="6" rx=".6"/></symbol>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1a1a1a"/></marker>
+    <marker id="arrow-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#a8a39e"/></marker>
+  </defs>
+</svg>
+
+<main class="viewport">
+<div class="stage" id="stage" data-current="0">
+
+  <header class="chrome-top">
+    <div class="wordmark"><svg aria-hidden="true"><use href="#logo"/></svg>ReviewRadar</div>
+    <div class="chrome-meta"><b>Checkpoint 2</b> · MOPS Laboratory Project</div>
+  </header>
+
+  <!-- ============ 01 · Title ============ -->
+  <section class="slide s-title" data-label="Title" aria-label="Title">
+    <div class="brand rv"><svg aria-hidden="true"><use href="#logo"/></svg>ReviewRadar</div>
+    <p class="eyebrow rv d1">Checkpoint 2 · MOPS Laboratory Project</p>
+    <h1 class="rv d1">Project Progress</h1>
+    <p class="desc rv d2">A web platform that helps product teams <b>understand customer feedback faster</b>: import reviews, analyse sentiment and track issues that keep coming back.</p>
+
+    <svg class="radar rv d1" viewBox="0 0 760 760" aria-hidden="true">
+      <g class="grid">
+        <circle cx="380" cy="380" r="370"/><circle cx="380" cy="380" r="280"/>
+        <circle cx="380" cy="380" r="190"/><circle cx="380" cy="380" r="100"/>
+        <line x1="10" y1="380" x2="750" y2="380"/><line x1="380" y1="10" x2="380" y2="750"/>
+      </g>
+      <path class="wedge" d="M380 380 L475.8 22.6 A370 370 0 0 1 683.1 167.6 Z"/>
+      <line class="sweep" x1="380" y1="380" x2="683.1" y2="167.6"/>
+      <circle class="dot" cx="236" cy="214" r="7"/>
+      <circle class="dot" cx="170" cy="452" r="6"/>
+      <circle class="dot" cx="302" cy="590" r="7"/>
+      <circle class="dot" cx="548" cy="532" r="6"/>
+      <circle class="dot" cx="652" cy="402" r="7"/>
+      <circle class="dot" cx="430" cy="290" r="6"/>
+      <circle class="dot" cx="470" cy="660" r="5"/>
+      <circle class="dot" cx="118" cy="300" r="5"/>
+      <circle class="dot ink" cx="560" cy="205" r="9"/>
+      <svg class="ring" x="522" y="167" width="76" height="76" viewBox="0 0 24 24"><path pathLength="1" d="M13.5 3.2C8 2.6 3.4 6 3.2 11.4c-.2 5 3.6 9.1 8.8 9.4 5 .3 8.9-3.2 8.9-8.4 0-4.6-3.4-8.3-8.2-8.6-1.6-.1-3 .3-4.1.9"/></svg>
+      <circle class="hub" cx="380" cy="380" r="10"/>
+    </svg>
+
+    <div class="team rv d3">
+      <div><div class="name">Cosmin Mărășoiu</div><div class="role">Scrum Master · Developer</div></div>
+      <div><div class="name">Alexandru Zamfir</div><div class="role">Product Owner</div></div>
+      <div><div class="name">Delia Tapai</div><div class="role">Developer</div></div>
+      <div><div class="name">Horia Zafiu</div><div class="role">Developer</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 02 · Meetings & communication ============ -->
+  <section class="slide s-meet" data-label="Meetings &amp; communication" aria-label="Meetings and communication">
+    <p class="kicker rv"><span class="num">01</span><span class="sep"></span>Meetings &amp; communication</p>
+    <h2 class="rv d1">How the team stayed in sync</h2>
+
+    <div class="comm rv d2">
+      <div class="label">Communication<span>Day to day</span></div>
+      <div class="chan">
+        <svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>
+        <div><h3>WhatsApp group</h3><p class="body">Ongoing communication and quick coordination</p></div>
+      </div>
+      <div class="chan">
+        <svg class="icon" aria-hidden="true"><use href="#i-headset"/></svg>
+        <div><h3>Discord</h3><p class="body">Voice calls for every team meeting</p></div>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="label rv d3">Meetings<span>2 sessions</span></div>
+      <div class="track">
+        <div class="meeting rv d3">
+          <div class="node"></div>
+          <p class="tag when">SESSION 01</p>
+          <h3>Kickoff &amp; Planning</h3>
+          <ul>
+            <li>Set up the <b>environment</b> and repository</li>
+            <li><b>Divided tasks</b> between team members</li>
+            <li>Discussed the <b>system architecture</b></li>
+          </ul>
+        </div>
+        <div class="meeting rv d4">
+          <div class="node"></div>
+          <p class="tag when">SESSION 02</p>
+          <h3>Debrief &amp; Review</h3>
+          <ul>
+            <li>Reviewed <b>implementation progress</b></li>
+            <li>Went through the <b>slides</b> and structure</li>
+            <li>Discussed the <b>next steps</b></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 · What changed: Authentication ============ -->
+  <section class="slide s-auth" data-label="What changed · Authentication" aria-label="What changed: authentication">
+    <p class="kicker rv"><span class="num">02</span><span class="sep"></span>What changed since Checkpoint 1 · Authentication</p>
+    <div class="cols">
+      <div class="intro">
+        <h2 class="rv d1">Supabase Auth now owns every account</h2>
+        <p class="status done rv d2">Integrated</p>
+        <p class="lead rv d2">Checkpoint 1 only listed “authentication”. We chose <b>Supabase Auth</b> and route it through our <b>FastAPI</b> gateway, so the UI never holds an auth key.</p>
+      </div>
+      <ul class="rows" style="margin-top:56px">
+        <li class="rv d2"><svg class="icon" aria-hidden="true"><use href="#i-userplus"/></svg><h3>Registration</h3>
+          <p class="body">Email and password sign-up; a <b>profile</b> is created automatically by a database trigger</p></li>
+        <li class="rv d3"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg><h3>Login</h3>
+          <p class="body">Supabase issues a <b>JWT</b>; FastAPI verifies it on every request</p></li>
+        <li class="rv d4"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><h3>Account &amp; session</h3>
+          <p class="body">Rotating refresh token in an <b>HttpOnly cookie</b>: the session survives a reload; sign out ends it</p></li>
+      </ul>
+    </div>
+    <div class="chain rv d5">
+      <div class="lbl">How it connects to collaboration</div>
+      <span class="step">Supabase account</span><span class="arrow"></span>
+      <span class="step">Project membership</span><span class="arrow"></span>
+      <span class="step key">Role in that project</span><span class="arrow"></span>
+      <span class="step">Allowed actions</span>
+    </div>
+  </section>
+
+  <!-- ============ 04 · What changed: Notifications ============ -->
+  <section class="slide s-notif" data-label="What changed · Notifications" aria-label="What changed: notifications">
+    <p class="kicker rv"><span class="num">02</span><span class="sep"></span>What changed since Checkpoint 1 · Notifications</p>
+    <div class="head">
+      <h2 class="rv d1">One inbox for every decision</h2>
+      <div class="legend rv d2">
+        <span class="status done">Implemented</span>
+        <span class="status planned">Planned</span>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="events rv d2" style="position:relative">
+        <p class="tag" style="position:absolute;top:-44px">EVENTS THAT NOTIFY</p>
+        <div class="ev"><span>Invited to a project</span><span class="status done">Live</span></div>
+        <div class="ev"><span>Invitation accepted or declined</span><span class="status done">Live</span></div>
+        <div class="ev later"><span>Sentiment analysis finished or failed</span><span class="status planned">Planned</span></div>
+        <div class="ev later"><span>Issue assigned to you</span><span class="status planned">Planned</span></div>
+      </div>
+      <div class="connector rv d3"></div>
+      <div class="hub-node rv d3">
+        <span class="tag">FASTAPI</span>
+        <h3>Notification service</h3>
+        <p class="small">One reusable <b style="color:var(--ink)">notify()</b> call per event</p>
+      </div>
+      <div class="fork rv d4" style="height:432px">
+        <svg viewBox="0 0 120 432" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 216 C60 216 60 98 116 98" fill="none" stroke="#1a1a1a" stroke-width="2" vector-effect="non-scaling-stroke" marker-end="url(#arrow)"/>
+          <path d="M0 216 C60 216 60 334 116 334" fill="none" stroke="#a8a39e" stroke-width="2" stroke-dasharray="8 8" vector-effect="non-scaling-stroke" marker-end="url(#arrow-soft)"/>
+        </svg>
+      </div>
+      <div class="channels">
+        <div class="channel done rv d4" style="height:196px">
+          <svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg>
+          <h3>In-app inbox</h3>
+          <span class="status done">Implemented</span>
+          <p class="small">Unread count in the top bar; Accept or Decline in place</p>
+        </div>
+        <div class="channel planned rv d5" style="height:196px">
+          <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>
+          <h3>Email via Brevo</h3>
+          <span class="status planned">Planned</span>
+          <p class="small">Transactional email for the same events</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chain rv d5" style="bottom:120px">
+      <div class="lbl">In the workflow</div>
+      <span class="step">Owner invites by email</span><span class="arrow"></span>
+      <span class="step key">Invitee is notified</span><span class="arrow"></span>
+      <span class="step">Accepts or declines</span><span class="arrow"></span>
+      <span class="step">Owner is notified</span>
+    </div>
+  </section>
+
+  <!-- ============ 05 · Implementation progress ============ -->
+  <section class="slide s-progress" data-label="Implementation progress" aria-label="Implementation progress">
+    <p class="kicker rv"><span class="num">03</span><span class="sep"></span>Implementation progress</p>
+    <h2 class="rv d1">The collaboration layer is built</h2>
+
+    <div class="areas">
+      <div class="area rv d2">
+        <span class="tag">01 · FR01</span>
+        <h3>Authentication</h3>
+        <ul>
+          <li><b>Sign up, sign in, sign out</b> through the FastAPI gateway</li>
+          <li>JWT verified against Supabase <b>JWKS</b></li>
+          <li>Session kept across reloads</li>
+        </ul>
+        <div class="tech"><span>Supabase Auth</span><span>FastAPI</span></div>
+      </div>
+      <div class="area rv d3">
+        <span class="tag">02 · FR02 · FR09</span>
+        <h3>Projects &amp; roles</h3>
+        <ul>
+          <li><b>Create, rename, archive</b> projects</li>
+          <li><b>Owner, analyst, product manager, viewer</b> from one permission map</li>
+          <li>A project always keeps an owner</li>
+        </ul>
+        <div class="tech"><span>PostgreSQL</span><span>SQLAlchemy</span></div>
+      </div>
+      <div class="area rv d4">
+        <span class="tag">03 · FR09</span>
+        <h3>Invitations &amp; inbox</h3>
+        <ul>
+          <li><b>Invite by email and role</b>; nobody joins without consent</li>
+          <li>Accept, decline, revoke; <b>7-day expiry</b></li>
+          <li>Inbox with unread count</li>
+        </ul>
+        <div class="tech"><span>Supabase Postgres</span><span>RLS</span></div>
+      </div>
+      <div class="area rv d5">
+        <span class="tag">04 · NFR06 · NFR07</span>
+        <h3>UI &amp; quality</h3>
+        <ul>
+          <li>Streamlit UI <b>redesigned</b>: top bar, ruled lists</li>
+          <li><b>pytest</b> suite for business rules and APIs</li>
+          <li><b>CI</b> runs tests on every pull request</li>
+        </ul>
+        <div class="tech"><span>Streamlit</span><span>pytest</span><span>GitHub Actions</span></div>
+      </div>
+    </div>
+
+    <div class="trello rv d5">
+      <svg class="icon" aria-hidden="true"><use href="#i-board"/></svg>
+      <span><b>Trello board updated</b>: task assignments, completed work and remaining activities</span>
+      <div class="figs">
+        <span class="fig"><b>71</b>automated tests</span>
+        <span class="fig"><b>96%</b>backend coverage</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 · Architecture ============ -->
+  <section class="slide s-arch" data-label="Implementation progress · Architecture" aria-label="Architecture">
+    <p class="kicker rv"><span class="num">03</span><span class="sep"></span>Implementation progress · Architecture</p>
+    <div class="head">
+      <h2 class="rv d1">How the pieces fit together</h2>
+      <div class="legend rv d2">
+        <span class="status done">In use</span>
+        <span class="status planned">Planned</span>
+      </div>
+    </div>
+
+    <div class="arch rv d2" style="height:600px">
+      <svg class="wires" viewBox="0 0 1640 600" aria-hidden="true">
+        <path d="M240 300 L406 300" marker-end="url(#arrow)"/>
+        <text x="325" y="284" text-anchor="middle">WebSocket</text>
+        <path d="M740 300 L906 300" marker-end="url(#arrow)"/>
+        <text x="825" y="284" text-anchor="middle">HTTP + JWT</text>
+        <path d="M1240 300 C1290 300 1290 66 1336 66" marker-end="url(#arrow)"/>
+        <path d="M1240 300 C1290 300 1290 222 1336 222" marker-end="url(#arrow)"/>
+        <path class="planned" d="M1240 300 C1290 300 1290 378 1336 378" marker-end="url(#arrow-soft)"/>
+        <path class="planned" d="M1240 300 C1290 300 1290 534 1336 534" marker-end="url(#arrow-soft)"/>
+      </svg>
+
+      <div class="node soft" style="left:0;top:200px;width:240px;height:200px">
+        <span class="tag">CLIENT</span><h3>Browser</h3><p>Refresh token in an HttpOnly cookie</p>
+      </div>
+      <div class="node" style="left:410px;top:200px;width:330px;height:200px">
+        <span class="tag">FRONTEND</span><h3>Streamlit</h3><p>Projects, project page, inbox; holds no auth key</p>
+      </div>
+      <div class="node key" style="left:910px;top:200px;width:330px;height:200px">
+        <span class="tag">BACKEND</span><h3>FastAPI</h3><p>Auth gateway, roles and all business rules</p>
+      </div>
+
+      <div class="node" style="left:1340px;top:0;width:300px;height:132px;padding:22px 26px">
+        <h3>Supabase Auth</h3><p>Accounts, tokens, JWKS</p>
+      </div>
+      <div class="node" style="left:1340px;top:156px;width:300px;height:132px;padding:22px 26px">
+        <h3>PostgreSQL</h3><p>Projects, roles, inbox</p>
+      </div>
+      <div class="node planned" style="left:1340px;top:312px;width:300px;height:132px;padding:22px 26px">
+        <h3>Hugging Face</h3><p>Sentiment models</p>
+      </div>
+      <div class="node planned" style="left:1340px;top:468px;width:300px;height:132px;padding:22px 26px">
+        <h3>Brevo</h3><p>Email delivery</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 · What's next ============ -->
+  <section class="slide s-next" data-label="What’s next" aria-label="What's next">
+    <p class="kicker rv"><span class="num">04</span><span class="sep"></span>What’s next</p>
+    <h2 class="rv d1">From projects to real review data</h2>
+
+    <div class="road">
+      <span class="solid"></span>
+      <div class="stop now rv d2">
+        <div class="pin"></div>
+        <span class="tag">TODAY</span>
+        <h3>Checkpoint 2</h3>
+        <p class="what">Accounts, projects, roles and invitations in place</p>
+      </div>
+      <div class="stop rv d3">
+        <div class="pin"></div>
+        <span class="tag">TEAM COLLABORATION</span>
+        <h3>Pair-programming session</h3>
+        <p class="what">Remote session over <b style="color:var(--ink)">Parsec</b>, working together on one screen</p>
+        <p class="why"><b>Why:</b> tackle the hardest tasks and the integration work side by side</p>
+      </div>
+      <div class="stop rv d4">
+        <div class="pin"></div>
+        <span class="tag">UPCOMING FEATURE</span>
+        <h3>CSV import with validation</h3>
+        <p class="what">Upload reviews; each row is checked, exact duplicates are skipped</p>
+        <p class="why"><b>Value:</b> real feedback enters a project, with clear error messages</p>
+        <div class="reqs"><span>FR03</span><span>FR04</span><span>NFR02</span></div>
+      </div>
+      <div class="stop rv d5">
+        <div class="pin"></div>
+        <span class="tag">UPCOMING FEATURE</span>
+        <h3>Sentiment analysis</h3>
+        <p class="what">Run a Hugging Face model in the background, store a label per review</p>
+        <p class="why"><b>Value:</b> the first insight, shown as an estimate that can be corrected</p>
+        <div class="reqs"><span>FR06</span><span>FR07</span><span>NFR03</span></div>
+      </div>
+      <div class="stop goal rv d5">
+        <div class="pin"></div>
+        <span class="tag">TARGET</span>
+        <h3>Checkpoint 3</h3>
+        <p class="what">⅔ of committed stories done</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 · Closing ============ -->
+  <section class="slide s-close" data-label="Summary" aria-label="Summary">
+    <div class="cols">
+      <div>
+        <p class="kicker rv"><span class="num">05</span><span class="sep"></span>Summary</p>
+        <h2 class="rv d1">Checkpoint 2 in three lines</h2>
+        <ul class="recap">
+          <li class="rv d2"><span class="k"><span class="num">01</span>Achieved</span>
+            <span class="v">Working <b>sign-in, projects, roles and invitations</b>, covered by automated tests</span></li>
+          <li class="rv d3"><span class="k"><span class="num">02</span>Evolved</span>
+            <span class="v">From proposal to running app; <b>Supabase Auth</b> integrated, <b>Brevo</b> email planned</span></li>
+          <li class="rv d4"><span class="k"><span class="num">03</span>Next</span>
+            <span class="v">Pair programming, then <b>CSV import</b> and <b>sentiment analysis</b>: the MVP core</span></li>
+        </ul>
+      </div>
+      <div class="thanks">
+        <div class="big rv d2">Thank you.</div>
+        <div class="q rv d3">Questions?
+          <svg class="ring" viewBox="0 0 440 150" aria-hidden="true"><path pathLength="1" d="M262 10 C140 2 16 24 12 76 C8 126 124 144 234 140 C344 136 434 114 430 70 C426 28 352 8 274 12 C244 13 218 18 198 26"/></svg>
+        </div>
+        <p class="who rv d4">Cosmin Mărășoiu · Alexandru Zamfir<br>Delia Tapai · Horia Zafiu</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="chrome-bottom">
+    <span class="chapter-label" id="chapter"></span>
+    <span class="counter" id="counter"></span>
+  </footer>
+  <div class="progress"><i id="bar"></i></div>
+</div>
+</main>
+
+<div class="controls" aria-label="Presentation controls">
+  <button id="prev" type="button" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button id="next" type="button" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button id="fs" type="button" aria-label="Toggle fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+<div class="hint"><kbd>←</kbd> <kbd>→</kbd> or <kbd>Space</kbd> to navigate · <kbd>F</kbd> fullscreen</div>
+
+<script src="deck.js"></script>
+</body>
+</html>
