@@ -12,7 +12,7 @@ if auth.access_token():
     except api_client.ApiError as e:
         st.error(e.detail)
         st.stop()
-    st.write(f"Signed in as **{me['email']}**" + (" (admin)" if me["is_admin"] else ""))
+    st.write(f"Signed in as **{me['email']}**")
     col1, col2 = st.columns(2)
     if col1.button("Go to projects", type="primary"):
         st.switch_page("pages/1_Projects.py")

@@ -75,7 +75,7 @@ def test_me_returns_profile(client, make_user, auth):
     user = make_user("me@x.io", full_name="Me")
     r = client.get("/me", headers=auth(user))
     assert r.status_code == 200
-    assert r.json() == {"id": str(user.id), "email": "me@x.io", "full_name": "Me", "is_admin": False, "is_active": True}
+    assert r.json() == {"id": str(user.id), "email": "me@x.io", "full_name": "Me", "is_active": True}
 
 
 def test_update_me(client, make_user, auth):

@@ -9,7 +9,6 @@ class Settings(BaseSettings):
     supabase_url: str = "http://127.0.0.1:64321"
     supabase_jwt_secret: str = ""  # only for legacy HS256 projects
     database_url: str = "postgresql+psycopg://postgres:postgres@127.0.0.1:64322/postgres"
-    admin_email: str = ""
 
 
 @lru_cache

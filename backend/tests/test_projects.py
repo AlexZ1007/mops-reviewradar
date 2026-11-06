@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import pytest
 from sqlalchemy import select
 
@@ -105,14 +107,6 @@ def test_viewer_cannot_write(client, project, owner, make_user, auth):
     assert add(client, project, viewer, auth, "owner@x.io", "viewer").status_code == 403
 
 
-def test_admin_passes_project_checks(client, project, make_user, auth):
-    admin = make_user("a@x.io", is_admin=True)
-    pid = project["id"]
-    r = client.get(f"/projects/{pid}", headers=auth(admin))
-    assert r.status_code == 200 and r.json()["my_role"] is None
-    assert client.patch(f"/projects/{pid}", json={"description": "fixed"}, headers=auth(admin)).status_code == 200
-
-
 # Members --------------------------------------------------------------------
 
 def test_add_member_by_email(client, db, project, owner, make_user, auth):
@@ -175,11 +169,59 @@ def test_non_owner_cannot_remove_others_but_can_leave(client, project, owner, ma
 
 # Last owner -------------------------------------------------------------------
 
-def test_last_owner_cannot_be_demoted_removed_or_leave(client, db, project, owner, auth):
+def set_joined(db, pid, user, when):
+    db.get(ProjectMember, (pid, user.id)).created_at = when
+    db.commit()
+
+
+def test_last_owner_cannot_be_demoted(client, db, project, owner, auth):
     pid = project["id"]
     assert client.patch(f"/projects/{pid}/members/{owner.id}", json={"role": "viewer"}, headers=auth(owner)).status_code == 409
-    assert client.delete(f"/projects/{pid}/members/{owner.id}", headers=auth(owner)).status_code == 409
     assert db.get(ProjectMember, (pid, owner.id)).role == ProjectRole.owner
+
+
+def test_only_member_cannot_leave(client, db, project, owner, auth):
+    pid = project["id"]
+    r = client.delete(f"/projects/{pid}/members/{owner.id}", headers=auth(owner))
+    assert r.status_code == 409 and "Archive" in r.json()["detail"]
+    assert db.get(ProjectMember, (pid, owner.id)).role == ProjectRole.owner
+
+
+def test_last_owner_leaving_promotes_oldest_member(client, db, project, owner, make_user, auth):
+    pid = project["id"]
+    newer, oldest = make_user("newer@x.io"), make_user("oldest@x.io")
+    add(client, project, owner, auth, "newer@x.io", "analyst")
+    add(client, project, owner, auth, "oldest@x.io", "viewer")
+    set_joined(db, pid, newer, datetime(2026, 3, 1, tzinfo=UTC))
+    set_joined(db, pid, oldest, datetime(2026, 1, 1, tzinfo=UTC))
+
+    assert client.delete(f"/projects/{pid}/members/{owner.id}", headers=auth(owner)).status_code == 204
+
+    assert db.get(ProjectMember, (pid, owner.id)) is None
+    assert db.get(ProjectMember, (pid, oldest.id)).role == ProjectRole.owner
+    assert db.get(ProjectMember, (pid, newer.id)).role == ProjectRole.analyst
+    assert audit_actions(db, pid)[-2:] == ["member.role_changed", "member.removed"]
+    # Takes effect immediately: the promoted user can now manage the project.
+    assert client.patch(f"/projects/{pid}", json={"description": "mine"}, headers=auth(oldest)).status_code == 200
+    log = db.scalars(select(AuditLog).where(AuditLog.action == "member.role_changed")).one()
+    assert log.actor_id == owner.id
+    assert log.details == {"user_id": str(oldest.id), "old_role": "viewer", "new_role": "owner", "reason": "last_owner_left"}
+
+
+def test_no_promotion_when_another_owner_exists(client, db, project, owner, make_user, auth):
+    pid = project["id"]
+    viewer, co_owner = make_user("v@x.io"), make_user("co@x.io")
+    add(client, project, owner, auth, "v@x.io", "viewer")
+    add(client, project, owner, auth, "co@x.io", "owner")
+    set_joined(db, pid, viewer, datetime(2020, 1, 1, tzinfo=UTC))
+    assert client.delete(f"/projects/{pid}/members/{owner.id}", headers=auth(owner)).status_code == 204
+    assert db.get(ProjectMember, (pid, viewer.id)).role == ProjectRole.viewer
+    assert "member.role_changed" not in audit_actions(db, pid)
+
+
+def test_members_include_joined_at(client, project, owner, auth):
+    members = client.get(f"/projects/{project['id']}/members", headers=auth(owner)).json()
+    assert members[0]["joined_at"]
 
 
 def test_owner_can_leave_when_another_owner_exists(client, project, owner, make_user, auth):

@@ -23,7 +23,6 @@ erDiagram
         uuid id PK,FK
         citext email UK
         varchar full_name
-        boolean is_admin
         boolean is_active
     }
     PROJECTS {
@@ -85,7 +84,7 @@ erDiagram
 | Roles live on `project_members`, not on `profiles` | A user can be owner in one project and viewer in another (FR09). |
 | Supabase Auth owns accounts (`auth.users`) | Passwords, reset and sessions are not implemented by the team. |
 | `profiles` 1:1 with `auth.users`, filled by trigger | App tables reference `profiles(id)` (UUID); email copied for member lookup. |
-| `profiles.is_admin` is the only global role | Platform admin manages users and can recover projects with no owner. |
+| No global admin role | Access is decided only by `project_members.role`. A project never loses its last owner: when the last owner leaves, the oldest member is promoted. |
 | RLS enabled on all `public` tables, no policies | The public anon key cannot read app data through the Supabase Data API; FastAPI is the only reader. |
 | `UNIQUE (project_id, content_hash)` on `reviews` | Exact duplicates rejected at DB level, re-importing a file is idempotent (FR04, NFR04). |
 | `imports.file_sha256` | Warn the user when the same file is uploaded again. |

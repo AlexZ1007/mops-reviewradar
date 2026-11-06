@@ -12,7 +12,6 @@ class ProfileOut(BaseModel):
     id: uuid.UUID
     email: str
     full_name: str
-    is_admin: bool
     is_active: bool
 
 
@@ -58,3 +57,4 @@ class MemberOut(BaseModel):
     email: str
     full_name: str
     role: ProjectRole
+    joined_at: datetime

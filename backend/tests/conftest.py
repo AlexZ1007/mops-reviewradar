@@ -71,8 +71,8 @@ def client(db, verifier):
 
 @pytest.fixture
 def make_user(db):
-    def _make(email, *, is_admin=False, is_active=True, full_name=""):
-        user = Profile(id=uuid.uuid4(), email=email, full_name=full_name, is_admin=is_admin, is_active=is_active)
+    def _make(email, *, is_active=True, full_name=""):
+        user = Profile(id=uuid.uuid4(), email=email, full_name=full_name, is_active=is_active)
         db.add(user)
         db.commit()
         return user

@@ -23,7 +23,7 @@ except api_client.ApiError as e:
     st.error(e.detail)
     st.stop()
 
-can_manage = project["my_role"] == "owner" or me["is_admin"]
+can_manage = project["my_role"] == "owner"
 archived = project["archived_at"] is not None
 
 
@@ -55,7 +55,7 @@ if st.button("← Projects"):
 
 st.title(project["name"])
 st.write(project["description"] or "")
-st.caption(f"Your role: {project['my_role'] or 'admin (not a member)'}" + (" · archived" if archived else ""))
+st.caption(f"Your role: {project['my_role']}" + (" · archived" if archived else ""))
 
 # Project settings (owner) -------------------------------------------------------
 if can_manage and not archived:
@@ -84,12 +84,41 @@ if can_manage and not archived:
         if c3.form_submit_button("Add"):
             run(lambda: api_client.post(f"/projects/{project_id}/members", {"email": email, "role": role}), f"Added {email}")
 
+def display_name(m: dict) -> str:
+    return m["full_name"] or m["email"]
+
+
+@st.dialog("Leave project?")
+def leave_dialog() -> None:
+    others = [m for m in members if m["user_id"] != me["id"]]
+    owners = [m for m in members if m["role"] == "owner"]
+    if project["my_role"] == "owner" and len(owners) == 1:
+        if not others:
+            st.warning("You are the only member of this project. Archive it instead of leaving.")
+            return
+        # Same rule as the API: the member who joined first becomes owner.
+        successor = min(others, key=lambda m: (m["joined_at"], m["user_id"]))
+        st.warning(
+            f"You are the last owner. **{display_name(successor)}** ({successor['email']}) joined the project "
+            "first and will become the owner when you leave."
+        )
+    else:
+        st.write("You will lose access to this project.")
+    if st.button("Leave project", type="primary"):
+        try:
+            api_client.delete(f"/projects/{project_id}/members/{me['id']}")
+        except api_client.ApiError as e:
+            st.error(e.detail)
+            return
+        st.session_state.pop("project_id", None)
+        st.switch_page("pages/1_Projects.py")
+
+
 for m in members:
     is_me = m["user_id"] == me["id"]
-    label = f"{m['full_name'] or m['email']}" + (" (you)" if is_me else "")
     with st.container(border=True):
         c1, c2, c3 = st.columns([3, 2, 1], vertical_alignment="center")
-        c1.markdown(f"**{label}**  \n{m['email']}")
+        c1.markdown(f"**{display_name(m)}**" + (" (you)" if is_me else "") + f"  \n{m['email']}")
         if can_manage and not archived:
             key = f"role_{m['user_id']}"
             st.session_state[key] = m["role"]  # always show the server's value
@@ -97,14 +126,12 @@ for m in members:
                 "Role", ROLES, key=key, label_visibility="collapsed",
                 on_change=on_role_change, args=(m["user_id"], m["role"]),
             )
-            if c3.button("Remove", key=f"rm_{m['user_id']}"):
-                run(lambda: api_client.delete(f"/projects/{project_id}/members/{m['user_id']}"), "Member removed")
         else:
             c2.write(m["role"])
-            if is_me and not archived and c3.button("Leave", key="leave"):
-                try:
-                    api_client.delete(f"/projects/{project_id}/members/{m['user_id']}")
-                    st.session_state.pop("project_id", None)
-                    st.switch_page("pages/1_Projects.py")
-                except api_client.ApiError as e:
-                    st.error(e.detail)
+        if archived:
+            continue
+        if is_me:
+            if c3.button("Leave", key="leave"):
+                leave_dialog()
+        elif can_manage and c3.button("Remove", key=f"rm_{m['user_id']}"):
+            run(lambda: api_client.delete(f"/projects/{project_id}/members/{m['user_id']}"), "Member removed")

@@ -52,7 +52,6 @@ mops/
 │   │       ├── router.py        # /projects, /projects/{id}/members
 │   │       ├── permissions.py   # PERMISSIONS mapping
 │   │       └── service.py       # business rules (last-owner rule, etc.)
-│   ├── scripts/make_admin.py    # sets profiles.is_admin for ADMIN_EMAIL
 │   ├── tests/                   # pytest (unit + API)
 │   └── pyproject.toml
 ├── frontend/
@@ -89,7 +88,6 @@ SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
 DATABASE_URL=postgresql+psycopg://postgres:postgres@127.0.0.1:64322/postgres
 API_BASE_URL=http://127.0.0.1:8000
-ADMIN_EMAIL=admin@reviewradar.local
 ```
 
 `.env` is git-ignored; only `.env.example` is committed. `SUPABASE_SECRET_KEY` and `DATABASE_URL` are used by the backend only.
@@ -103,9 +101,8 @@ ADMIN_EMAIL=admin@reviewradar.local
 5. **Backend skeleton** – FastAPI app with `/health`, settings, DB session dependency.
 6. **Auth** – JWKS verification, `get_current_user`, `/me`. See [auth-and-roles.md](auth-and-roles.md).
 7. **Projects + roles** – project CRUD, membership endpoints, `require_permission` dependency.
-8. **Admin** – sign up the admin account, run `scripts/make_admin.py`.
-9. **Frontend** – sign in / sign up / sign out with `supabase-py`, session in `st.session_state`, projects list, members page.
-10. **Tests + CI** – unit/API tests with dependency overrides (no Supabase needed); GitHub Actions runs `pytest --cov` on every PR. Optional integration job with `supabase start`.
+8. **Frontend** – sign in / sign up / sign out with `supabase-py`, session in `st.session_state`, projects list, members page.
+9. **Tests + CI** – unit/API tests with dependency overrides (no Supabase needed); GitHub Actions runs `pytest --cov` on every PR. Optional integration job with `supabase start`.
 
 Run locally (Python deps are managed with [uv](https://docs.astral.sh/uv/)):
 
@@ -151,7 +148,7 @@ Notes:
 | #2 Project | Streamlit projects page | Pair programming |
 | #3 Roles | `require_permission` dependency + `PERMISSIONS` map | TDD |
 | #3 Roles | Member endpoints (add by email, change role, remove) | TDD |
-| #3 Roles | Last-owner protection rule | TDD |
+| #3 Roles | Last-owner rule (no demotion; oldest member promoted when last owner leaves) | TDD |
 | #3 Roles | Streamlit members page (owner only) | Pair programming |
 
 Dependencies: #1 → #2 → #3. Every later story (import, analysis, dashboard) depends on #3's permission check.

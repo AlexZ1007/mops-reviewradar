@@ -51,10 +51,10 @@ def get_current_user(
 class ProjectContext:
     project: Project
     user: Profile
-    role: ProjectRole | None  # None when a platform admin is not a member
+    role: ProjectRole
 
     def can(self, permission: str) -> bool:
-        return self.user.is_admin or has_permission(self.role, permission)
+        return has_permission(self.role, permission)
 
 
 def require_permission(permission: str):
@@ -69,9 +69,9 @@ def require_permission(permission: str):
     ) -> ProjectContext:
         project = db.get(Project, project_id)
         member = db.get(ProjectMember, (project_id, user.id)) if project else None
-        ctx = ProjectContext(project=project, user=user, role=member.role if member else None)
-        if project is None or (member is None and not user.is_admin):
+        if project is None or member is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found")
+        ctx = ProjectContext(project=project, user=user, role=member.role)
         if not ctx.can(permission):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Insufficient project role")
         if project.archived_at is not None and permission not in READ_ONLY:

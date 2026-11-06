@@ -1,6 +1,5 @@
 -- Local seed data. Users are created through Supabase Auth (sign-up in the UI),
 -- which fires on_auth_user_created and creates their profiles row.
--- Promote the admin afterwards with:  cd backend && uv run python scripts/make_admin.py
 --
 -- Local-only demo account used during development (sign up in the UI after `supabase db reset`):
 --   email:    demo@reviewradar.local

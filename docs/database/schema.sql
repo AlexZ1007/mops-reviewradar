@@ -25,7 +25,6 @@ CREATE TABLE profiles (
     id              UUID         PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email           CITEXT       NOT NULL UNIQUE,    -- copy of auth.users.email, used to invite members
     full_name       VARCHAR(120) NOT NULL DEFAULT '',
-    is_admin        BOOLEAN      NOT NULL DEFAULT FALSE,  -- platform administrator
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,   -- app-level block, checked by the API
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT now()

@@ -103,7 +103,9 @@ def archive_project(db: Session, ctx: ProjectContext) -> None:
 # Members -------------------------------------------------------------------
 
 def _member_out(m: ProjectMember) -> MemberOut:
-    return MemberOut(user_id=m.user_id, email=m.profile.email, full_name=m.profile.full_name, role=m.role)
+    return MemberOut(
+        user_id=m.user_id, email=m.profile.email, full_name=m.profile.full_name, role=m.role, joined_at=m.created_at
+    )
 
 
 def list_members(db: Session, ctx: ProjectContext) -> list[MemberOut]:
@@ -157,7 +159,7 @@ def change_role(db: Session, ctx: ProjectContext, user_id: uuid.UUID, role: Proj
     if member.role == role:
         return _member_out(member)
     if role != ProjectRole.owner and _is_last_owner(db, member):
-        raise _conflict("A project must have at least one owner")
+        raise _conflict("A project must have at least one owner. Make another member owner first.")
     old = member.role
     member.role = role
     _audit(db, ctx.project.id, ctx.user, "member.role_changed",
@@ -166,13 +168,30 @@ def change_role(db: Session, ctx: ProjectContext, user_id: uuid.UUID, role: Proj
     return _member_out(member)
 
 
+def oldest_other_member(db: Session, project_id: int, exclude_user_id: uuid.UUID) -> ProjectMember | None:
+    """The member who joined the project first, excluding the given user."""
+    return db.scalars(
+        select(ProjectMember)
+        .where(ProjectMember.project_id == project_id, ProjectMember.user_id != exclude_user_id)
+        .order_by(ProjectMember.created_at, ProjectMember.user_id)
+        .limit(1)
+    ).first()
+
+
 def remove_member(db: Session, ctx: ProjectContext, user_id: uuid.UUID) -> None:
     is_self = user_id == ctx.user.id
     if not is_self and not ctx.can("members.manage"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Insufficient project role")
     member = _get_member(db, ctx.project.id, user_id)
     if _is_last_owner(db, member):
-        raise _conflict("A project must have at least one owner")
+        # Only the last owner can remove the last owner, so this is always the owner leaving.
+        successor = oldest_other_member(db, ctx.project.id, user_id)
+        if successor is None:
+            raise _conflict("You are the only member of this project. Archive it instead of leaving.")
+        old_role = successor.role
+        successor.role = ProjectRole.owner
+        _audit(db, ctx.project.id, ctx.user, "member.role_changed", user_id=successor.user_id,
+               old_role=old_role.value, new_role=ProjectRole.owner.value, reason="last_owner_left")
     db.delete(member)
     _audit(db, ctx.project.id, ctx.user, "member.removed",
            user_id=user_id, role=member.role.value, self_removed=is_self)
