@@ -1,0 +1,33 @@
+# ReviewRadar: FastAPI backend + Streamlit frontend.
+# Postgres/Auth come from Supabase (hosted, or the local Supabase CLI stack on the host).
+# Configure via .env (see .env.example). Loopback URLs in .env are rewritten below so the
+# containers can reach a Supabase CLI stack running on the host.
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      SUPABASE_URL: ${DOCKER_SUPABASE_URL:-http://host.docker.internal:64321}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+psycopg://postgres:postgres@host.docker.internal:64322/postgres}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    env_file: .env
+    environment:
+      API_BASE_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
