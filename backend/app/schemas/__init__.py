@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models import InvitationStatus, ProjectRole
 
@@ -62,6 +62,54 @@ class ProjectOut(BaseModel):
     archived_at: datetime | None
     created_at: datetime
     my_role: ProjectRole | None = None
+
+
+COLOR_PATTERN = r"^#[0-9a-fA-F]{6}$"
+
+
+def _clean_category_name(value: str) -> str:
+    value = value.strip()
+    if not value:
+        raise ValueError("Name is required")
+    return value
+
+
+def _lower_color(value: str | None) -> str | None:
+    return value.lower() if value else value
+
+
+class CategoryCreate(BaseModel):
+    name: str = Field(max_length=80)
+    color: str | None = Field(default=None, pattern=COLOR_PATTERN)  # #RRGGBB
+
+    _name = field_validator("name")(_clean_category_name)
+    _color = field_validator("color")(_lower_color)
+
+
+class CategoryUpdate(BaseModel):
+    """Partial update: omitted fields are untouched, `"color": null` clears the color."""
+
+    name: str | None = Field(default=None, max_length=80)
+    color: str | None = Field(default=None, pattern=COLOR_PATTERN)
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, v: str | None) -> str:
+        if v is None:
+            raise ValueError("Name can't be null")
+        return _clean_category_name(v)
+
+    _color = field_validator("color")(_lower_color)
+
+
+class CategoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    project_id: int
+    name: str
+    color: str | None
+    created_at: datetime
 
 
 class InvitationCreate(BaseModel):

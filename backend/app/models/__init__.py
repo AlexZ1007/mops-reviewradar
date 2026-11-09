@@ -96,6 +96,16 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Category(Base):
+    __tablename__ = "categories"
+
+    id: Mapped[int] = mapped_column(BigId, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(BigId, ForeignKey("projects.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(80))
+    color: Mapped[str | None] = mapped_column(String(7))  # #rrggbb, lower case
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class InvitationStatus(str, enum.Enum):
     pending = "pending"
     accepted = "accepted"
