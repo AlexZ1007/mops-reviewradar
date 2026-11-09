@@ -23,7 +23,6 @@ erDiagram
         uuid id PK,FK
         citext email UK
         varchar full_name
-        boolean is_admin
         boolean is_active
     }
     PROJECTS {
@@ -45,6 +44,37 @@ erDiagram
         uuid actor_id FK
         varchar action
         jsonb details
+    }
+```
+
+## Invitations and notifications
+
+See [invite-system.md](../invite-system.md).
+
+```mermaid
+erDiagram
+    PROJECTS ||--o{ PROJECT_INVITATIONS : "invites"
+    PROFILES ||--o{ PROJECT_INVITATIONS : "invited_by"
+    PROFILES ||--o{ NOTIFICATIONS : "receives"
+    PROJECT_INVITATIONS |o--o{ NOTIFICATIONS : "about"
+
+    PROJECT_INVITATIONS {
+        bigint id PK
+        bigint project_id FK
+        citext email
+        project_role role
+        invitation_status status
+        uuid invited_by FK
+        timestamptz expires_at
+    }
+    NOTIFICATIONS {
+        bigint id PK
+        uuid user_id FK
+        varchar type
+        bigint project_id FK
+        bigint invitation_id FK
+        jsonb payload
+        timestamptz read_at
     }
 ```
 
@@ -85,11 +115,13 @@ erDiagram
 | Roles live on `project_members`, not on `profiles` | A user can be owner in one project and viewer in another (FR09). |
 | Supabase Auth owns accounts (`auth.users`) | Passwords, reset and sessions are not implemented by the team. |
 | `profiles` 1:1 with `auth.users`, filled by trigger | App tables reference `profiles(id)` (UUID); email copied for member lookup. |
-| `profiles.is_admin` is the only global role | Platform admin manages users and can recover projects with no owner. |
+| No global admin role | Access is decided only by `project_members.role`. A project never loses its last owner: when the last owner leaves, the oldest member is promoted. |
 | RLS enabled on all `public` tables, no policies | The public anon key cannot read app data through the Supabase Data API; FastAPI is the only reader. |
 | `UNIQUE (project_id, content_hash)` on `reviews` | Exact duplicates rejected at DB level, re-importing a file is idempotent (FR04, NFR04). |
 | `imports.file_sha256` | Warn the user when the same file is uploaded again. |
 | `review_sentiments.predicted_label` + `final_label` | Keeps the AI estimate and the human correction separately (NFR05). |
 | `projects.archived_at` soft delete | Project data is kept for audit; archived projects are hidden. |
 | `audit_log` | Role changes and project actions are traceable (story #3, FR15). |
+| Invitations, not direct adds | Nobody becomes a member without accepting; invitations are keyed by email so people without an account can be invited. |
+| Generic `notifications` table | One inbox for invitations now and later events (analysis finished, issue assigned). |
 | Tables added per story | Sprint 1 migration contains only `profiles`, `projects`, `project_members`, `audit_log`. |

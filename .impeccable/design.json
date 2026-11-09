@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T00:00:00Z",
+  "title": "Design System: ReviewRadar",
+  "extensions": {
+    "colorMeta": {
+      "pencil": { "role": "primary", "displayName": "Editor's Crimson", "canonical": "#b0122b", "tonalRamp": ["#3d0610", "#5e0a19", "#850e22", "#b0122b", "#d0424f", "#e88a92", "#f4c4c9", "#fbecee"] },
+      "pencil-wash": { "role": "primary", "displayName": "Pencil Wash", "canonical": "#f8e4e7", "tonalRamp": ["#5e3a40", "#7f5a60", "#a37f85", "#c7a6ab", "#e2c8cc", "#f0d8dc", "#f8e4e7", "#fdf4f5"] },
+      "ink": { "role": "neutral", "displayName": "Proof Ink", "canonical": "#1a1a1a", "tonalRamp": ["#0d0d0d", "#1a1a1a", "#333333", "#4d4d4d", "#737373", "#a6a6a6", "#d4d4d4", "#f2f2f2"] },
+      "graphite": { "role": "neutral", "displayName": "Graphite", "canonical": "#5f5b57", "tonalRamp": ["#22201f", "#3a3735", "#4d4a47", "#5f5b57", "#807b76", "#a8a39e", "#d0ccc8", "#efedeb"] },
+      "rule": { "role": "neutral", "displayName": "Hairline", "canonical": "#e7e4e0", "tonalRamp": ["#3b3834", "#5c5853", "#807b75", "#a6a19a", "#c9c4be", "#e7e4e0", "#f1efec", "#faf9f8"] },
+      "tint": { "role": "neutral", "displayName": "Margin Tint", "canonical": "#f6f5f3", "tonalRamp": ["#3d3b38", "#5e5b57", "#85817c", "#aba7a2", "#cfccc8", "#e7e5e2", "#f6f5f3", "#fbfbfa"] },
+      "sheet": { "role": "neutral", "displayName": "Sheet", "canonical": "#ffffff", "tonalRamp": ["#262626", "#474747", "#6b6b6b", "#949494", "#bdbdbd", "#e0e0e0", "#f5f5f5", "#ffffff"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Sign-in headline only; 2rem under 640px." },
+      "headline": { "displayName": "Headline", "purpose": "Page titles (Projects, Inbox, project name); 2rem under 640px." },
+      "section": { "displayName": "Section", "purpose": "Serif section heads inside a page." },
+      "title": { "displayName": "Title", "purpose": "Project names (as links), invitation, empty-state and danger-zone titles." },
+      "body": { "displayName": "Body", "purpose": "Row lines and notification text; 15px base." },
+      "body-sub": { "displayName": "Body Sub", "purpose": "Graphite sub-line under row titles, max 62ch, clamped to two lines." },
+      "meta": { "displayName": "Meta", "purpose": "One line of facts under a page title; counts in tabular numerals." },
+      "label": { "displayName": "Label", "purpose": "Nav tabs, tab labels, role text." },
+      "wordmark": { "displayName": "Wordmark", "purpose": "ReviewRadar beside the radar mark." }
+    },
+    "shadows": [
+      { "name": "tab-underline", "value": "inset 0 -2px 0 #b0122b", "purpose": "Crimson underline on the current top-bar tab; a mark, not elevation." },
+      { "name": "bar-bleed", "value": "0 0 0 100vmax #ffffff", "purpose": "Paints the top bar full-bleed white (paired with clip-path: inset(0 -100vmax)); not elevation." }
+    ],
+    "motion": [
+      { "name": "ring-draw", "value": "rr-ring 0.6s cubic-bezier(.16, 1, .3, 1) 0.1s both", "purpose": "The pencil ring sweeps in once on load via clip-path, starting where the stroke starts; disabled under prefers-reduced-motion." },
+      { "name": "ease-pencil", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "Fast-out, long settle easing for the ring draw-in." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single crimson action on a page head or decision row, usually with a leading Material Symbol.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M11 13H5v-2h6V5h2v6h6v2h-6v6h-2z\"/></svg>New project</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--pencil, #b0122b); color: #fff; border: 1px solid var(--pencil, #b0122b); border-radius: 6px; padding: 6px 14px; font: 500 15px 'Hanken Grotesk', sans-serif; cursor: pointer; transition: filter .15s; } .ds-btn-primary:hover { filter: brightness(.9); } .ds-btn-primary:focus-visible { outline: 2px solid var(--pencil, #b0122b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "White, hairline-bordered companion action (Decline, Mark all as read, Open project).",
+      "html": "<button class=\"ds-btn-secondary\">Decline</button>",
+      "css": ".ds-btn-secondary { background: #fff; color: var(--ink, #1a1a1a); border: 1px solid var(--rule, #e7e4e0); border-radius: 6px; padding: 6px 14px; font: 400 15px 'Hanken Grotesk', sans-serif; cursor: pointer; transition: color .15s, border-color .15s; } .ds-btn-secondary:hover { color: var(--pencil, #b0122b); border-color: var(--pencil, #b0122b); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--pencil, #b0122b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Project Link",
+      "kind": "custom",
+      "refersTo": "project-link",
+      "description": "Project names are the link: serif, no button chrome, crimson underline on hover.",
+      "html": "<button class=\"ds-project-link\">Mobile app reviews</button>",
+      "css": ".ds-project-link { background: none; border: 0; padding: 0; font: 600 1.15rem/1.3 'Source Serif 4', Georgia, serif; color: var(--ink, #1a1a1a); text-align: left; cursor: pointer; } .ds-project-link:hover { color: var(--pencil, #b0122b); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; } .ds-project-link:focus-visible { outline: 2px solid var(--pencil, #b0122b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Native field: visible label, tint fill, hairline border, crimson focus.",
+      "html": "<label class=\"ds-field\"><span>Project name</span><input class=\"ds-input\" placeholder=\"e.g. Mobile app reviews\"></label>",
+      "css": ".ds-field { display: grid; gap: 4px; font: 400 14px 'Hanken Grotesk', sans-serif; color: var(--ink, #1a1a1a); } .ds-input { background: var(--tint, #f6f5f3); border: 1px solid var(--rule, #e7e4e0); border-radius: 6px; padding: 8px 12px; font: 400 15px 'Hanken Grotesk', sans-serif; color: var(--ink, #1a1a1a); caret-color: var(--pencil, #b0122b); } .ds-input:hover { border-color: #cfcac5; } .ds-input:focus-visible { outline: none; border-color: var(--pencil, #b0122b); }"
+    },
+    {
+      "name": "Top Bar",
+      "kind": "nav",
+      "refersTo": "top-bar",
+      "description": "White sticky strip: wordmark, Projects and Inbox tabs with crimson underline on the current one, account initials right.",
+      "html": "<nav class=\"ds-topbar\"><span class=\"ds-wordmark\">ReviewRadar</span><a class=\"ds-tab ds-tab-on\" href=\"#\">Projects</a><a class=\"ds-tab\" href=\"#\">Inbox · 3</a><span class=\"ds-avatar ds-avatar-me\">AZ</span></nav>",
+      "css": ".ds-topbar { display: flex; align-items: center; gap: 2rem; min-height: 60px; background: #fff; border-bottom: 1px solid var(--rule, #e7e4e0); padding: 0 1rem; font-family: 'Hanken Grotesk', sans-serif; } .ds-wordmark { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; color: var(--ink, #1a1a1a); } .ds-tab { padding: 18px 2px 17px; font-weight: 500; color: var(--graphite, #5f5b57); text-decoration: none; } .ds-tab:hover { color: var(--ink, #1a1a1a); } .ds-tab:focus-visible { outline: 2px solid var(--pencil, #b0122b); outline-offset: 2px; } .ds-tab-on { color: var(--ink, #1a1a1a); font-weight: 600; box-shadow: inset 0 -2px 0 var(--pencil, #b0122b); } .ds-avatar { margin-left: auto; width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--tint, #f6f5f3); color: var(--ink, #1a1a1a); font-weight: 600; font-size: .8rem; letter-spacing: .02em; } .ds-avatar-me { background: var(--ink, #1a1a1a); color: #fff; }"
+    },
+    {
+      "name": "Ruled Row",
+      "kind": "custom",
+      "refersTo": "row",
+      "description": "A band between hairlines with a reserved 30px left margin; serif title, graphite sub-line, right-aligned role.",
+      "html": "<div class=\"ds-row\"><div><div class=\"ds-row-title\">Mobile app reviews</div><div class=\"ds-row-sub\">App Store and Play feedback for the 4.x release</div></div><span class=\"ds-row-role\">Owner</span></div>",
+      "css": ".ds-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--rule, #e7e4e0); padding: 14px 0 14px 30px; position: relative; font-family: 'Hanken Grotesk', sans-serif; } .ds-row:hover { background: linear-gradient(90deg, transparent, var(--tint, #f6f5f3) 30px); } .ds-row-title { font: 600 1.15rem/1.3 'Source Serif 4', Georgia, serif; color: var(--ink, #1a1a1a); } .ds-row-sub { color: var(--graphite, #5f5b57); font-size: .92rem; line-height: 1.45; margin-top: 2px; max-width: 62ch; } .ds-row-role { color: var(--ink, #1a1a1a); font-weight: 600; font-size: .9rem; white-space: nowrap; }"
+    },
+    {
+      "name": "Marked Row (Pencil Ring)",
+      "kind": "custom",
+      "refersTo": "row",
+      "description": "Signature: a hand-drawn crimson ring draws in once in the left margin of rows needing a decision or unread.",
+      "html": "<div class=\"ds-row ds-row-mark\"><div><div class=\"ds-row-title\">Checkout redesign</div><div class=\"ds-row-sub\">Maria Pop invited you as <b>Analyst</b> · 2 hours ago</div></div><span><button class=\"ds-btn-secondary\">Decline</button> <button class=\"ds-btn-primary\">Accept</button></span></div>",
+      "css": ".ds-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--rule, #e7e4e0); padding: 14px 0 14px 30px; position: relative; font-family: 'Hanken Grotesk', sans-serif; } .ds-row:hover { background: linear-gradient(90deg, transparent, var(--tint, #f6f5f3) 30px); } .ds-row-title { font: 600 1.15rem/1.3 'Source Serif 4', Georgia, serif; color: var(--ink, #1a1a1a); } .ds-row-sub { color: var(--graphite, #5f5b57); font-size: .92rem; line-height: 1.45; margin-top: 2px; } .ds-row-mark::before { content: ''; position: absolute; left: 2px; top: 18px; width: 18px; height: 18px; background: url(\"data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13.5 3.2C8 2.6 3.4 6 3.2 11.4c-.2 5 3.6 9.1 8.8 9.4 5 .3 8.9-3.2 8.9-8.4 0-4.6-3.4-8.3-8.2-8.6-1.6-.1-3 .3-4.1.9' fill='none' stroke='%23b0122b' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E\") center / contain no-repeat; animation: ds-ring .6s cubic-bezier(.16, 1, .3, 1) .1s both; } @keyframes ds-ring { from { clip-path: polygon(50% 50%, 60% 0, 60% 0, 60% 0, 60% 0, 60% 0, 60% 0); } 25% { clip-path: polygon(50% 50%, 60% 0, 0 0, 0 0, 0 0, 0 0, 0 0); } 50% { clip-path: polygon(50% 50%, 60% 0, 0 0, 0 100%, 0 100%, 0 100%, 0 100%); } 75% { clip-path: polygon(50% 50%, 60% 0, 0 0, 0 100%, 100% 100%, 100% 100%, 100% 100%); } to { clip-path: polygon(50% 50%, 60% 0, 0 0, 0 100%, 100% 100%, 100% 0, 60% 0); } } @media (prefers-reduced-motion: reduce) { .ds-row-mark::before { animation: none; } } .ds-btn-primary { background: #b0122b; color: #fff; border: 1px solid #b0122b; border-radius: 6px; padding: 6px 14px; font: 500 15px 'Hanken Grotesk', sans-serif; cursor: pointer; } .ds-btn-primary:hover { filter: brightness(.9); } .ds-btn-secondary { background: #fff; color: #1a1a1a; border: 1px solid #e7e4e0; border-radius: 6px; padding: 6px 14px; font: 400 15px 'Hanken Grotesk', sans-serif; cursor: pointer; } .ds-btn-secondary:hover { color: #b0122b; border-color: #b0122b; } .ds-btn-primary:focus-visible, .ds-btn-secondary:focus-visible { outline: 2px solid #b0122b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Page Tabs",
+      "kind": "nav",
+      "refersTo": "nav-tab",
+      "description": "Project-page tabs with counts in the label, crimson highlight bar, hairline track.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-ptab ds-ptab-on\" role=\"tab\">Members  4</button><button class=\"ds-ptab\" role=\"tab\">Invitations  2</button><button class=\"ds-ptab\" role=\"tab\">Settings</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 1.5rem; border-bottom: 1px solid var(--rule, #e7e4e0); font-family: 'Hanken Grotesk', sans-serif; } .ds-ptab { background: none; border: 0; padding: 10px 0; margin-bottom: -1px; font-weight: 500; font-size: 15px; color: var(--ink, #1a1a1a); white-space: pre; cursor: pointer; } .ds-ptab:hover { color: var(--pencil, #b0122b); } .ds-ptab:focus-visible { outline: 2px solid var(--pencil, #b0122b); outline-offset: 2px; } .ds-ptab-on { color: var(--pencil, #b0122b); box-shadow: inset 0 -2px 0 var(--pencil, #b0122b); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Editor's Red Pencil",
+    "overview": "The workspace is a clean proof sheet. Everything is set in ink on white, separated by hairline rules the way a galley proof is ruled, and the only colour on the page is the editor's crimson pencil. The pencil marks two things: what needs your decision, and where you are. It underlines the current tab, circles the row waiting for your answer, fills the one main action on a page, and carries the caret and focus ring. Nothing is crimson for decoration.\n\nDensity is calm and list-shaped: one 1040px column, a serif title with one line of facts beneath it, the page's main action at the right, then ruled rows. Every row keeps a 30px left margin, and that margin is where the pencil ring is drawn. The system refuses the sidebar-plus-card-grid dashboard: navigation lives in a white top bar, content lives in rows, not cards, and panels carry no shadow.\n\nType does the hierarchy work. Source Serif 4 semibold is the editor's hand for page titles, section heads and project names; Hanken Grotesk carries every piece of interface. Motion is a single gesture: the ring draws itself in once when the page loads, and stays static under reduced motion.",
+    "keyCharacteristics": [
+      "White sheet, ink text, graphite secondary text, hairline rules; crimson used only as a pencil mark.",
+      "Serif for names and titles, grotesk for UI.",
+      "Hairline-ruled rows with a reserved 30px left margin; a hand-drawn crimson ring in that margin marks rows that need a decision or are unread.",
+      "White sticky top bar; the current tab is underlined in crimson.",
+      "Flat panels; creation and invitation happen in popovers anchored to the page's main action; the project page splits into tabs.",
+      "Gently rounded controls (6px); Material Symbols icons."
+    ],
+    "rules": [
+      { "name": "The Pencil Rule", "body": "Crimson marks only what needs a decision or where you are. If a crimson element answers neither \"act here\" nor \"you are here\", it is decoration and comes out.", "section": "colors" },
+      { "name": "The One Hue Rule", "body": "There is no secondary or tertiary accent. Hierarchy comes from ink versus graphite and from serif versus grotesk, never from a second colour.", "section": "colors" },
+      { "name": "The Named Things Rule", "body": "Serif is reserved for page titles, section heads and project names. Buttons, labels, meta, roles and body copy are always Hanken Grotesk.", "section": "typography" },
+      { "name": "The Tabular Count Rule", "body": "Counts in a page's meta line use tabular numerals.", "section": "typography" },
+      { "name": "The Ruled Sheet Rule", "body": "Separate content with a 1px hairline, never with a card, fill or shadow. Only genuinely floating layers (popover, dialog, toast) lift off the sheet.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do reserve the 30px left margin on every row, marked or not, so rows align and the ring has a home.",
+      "Do put the pencil ring only on rows that need the visitor's decision or are unread, and sort those rows first.",
+      "Do set page titles, section heads and project names in Source Serif 4 600; set everything else in Hanken Grotesk.",
+      "Do keep one primary crimson action per page head or decision, with secondary or tertiary buttons beside it.",
+      "Do use Material Symbols for every icon.",
+      "Do carry counts inside labels (tabs, filters, Inbox) rather than as separate badges or stat tiles.",
+      "Do keep the ring's draw-in a single, one-time gesture and static under reduced motion."
+    ],
+    "donts": [
+      "Don't use crimson for decoration, backgrounds, or a second meaning beyond \"act here\" or \"you are here\".",
+      "Don't wrap rows or page content in cards, filled panels or drop shadows; separate with hairlines.",
+      "Don't add a sidebar or a card-grid dashboard; navigation lives in the top bar.",
+      "Don't introduce a second accent hue.",
+      "Don't set buttons, labels or body copy in the serif."
+    ]
+  }
+}

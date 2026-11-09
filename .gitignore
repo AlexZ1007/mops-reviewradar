@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.coverage
+htmlcov/
+.pytest_cache/
+supabase/.temp/
+supabase/.branches/
+
+.claude/
+.cursor/
+.vscode/

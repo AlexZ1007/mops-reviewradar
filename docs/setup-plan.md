@@ -16,8 +16,9 @@ Requirements covered: FR01, FR02, FR09, NFR01, NFR06.
 
 ```mermaid
 flowchart LR
-    UI[Streamlit frontend<br/>:8501] -- "sign up / sign in" --> SA[Supabase Auth]
-    UI -- "HTTP + Bearer Supabase JWT" --> API[FastAPI backend<br/>:8000]
+    B[Browser] -- "websocket + HttpOnly refresh cookie" --> UI[Streamlit frontend<br/>:8501]
+    UI -- "HTTP + Bearer Supabase JWT<br/>/auth/login · /auth/refresh" --> API[FastAPI backend<br/>:8000]
+    API -- "sign in / refresh / logout" --> SA[Supabase Auth]
     API -- "verify JWT (JWKS)" --> SA
     API -- SQLAlchemy --> DB[(Supabase Postgres)]
     SA --- DB
@@ -25,7 +26,8 @@ flowchart LR
 ```
 
 - **Supabase** provides Postgres and Auth in one project. Accounts live in `auth.users`; app data in the `public` schema.
-- Streamlit talks to Supabase **only for authentication**, then calls FastAPI with the access token. It never reads app tables.
+- Streamlit talks **only to FastAPI**. Sign-in, sign-up, token refresh and logout go through FastAPI `/auth/*`, which calls Supabase Auth; every other call carries the Supabase access token (JWT).
+- Sessions survive a page reload: the Supabase refresh token is kept in an **HttpOnly cookie** set by the Streamlit server, and exchanged for a fresh token pair on the next page load.
 - FastAPI verifies the Supabase JWT, enforces roles and owns all business rules.
 - Schema: [database/schema.sql](database/schema.sql). Auth design: [auth-and-roles.md](auth-and-roles.md).
 
@@ -52,13 +54,14 @@ mops/
 │   │       ├── router.py        # /projects, /projects/{id}/members
 │   │       ├── permissions.py   # PERMISSIONS mapping
 │   │       └── service.py       # business rules (last-owner rule, etc.)
-│   ├── scripts/make_admin.py    # sets profiles.is_admin for ADMIN_EMAIL
 │   ├── tests/                   # pytest (unit + API)
 │   └── pyproject.toml
 ├── frontend/
+│   ├── app.py                   # entry point: st.App + /api/session-cookie route
 │   ├── Home.py                  # sign in / sign up page
 │   ├── pages/                   # Projects, Members, Import, Dashboard
-│   ├── auth.py                  # supabase-py client, session handling
+│   ├── auth.py                  # token pair in session_state, refresh, restore from cookie
+│   ├── session_cookie.py        # HttpOnly refresh-token cookie (nonce hand-off)
 │   └── api_client.py            # requests wrapper adding Bearer token
 ├── docs/
 ├── .env.example
@@ -77,22 +80,22 @@ Migrations are managed with the **Supabase CLI** (plain SQL), not Alembic, becau
 | FastAPI / Uvicorn | API |
 | SQLAlchemy 2.x + psycopg 3 | DB access |
 | PyJWT[crypto] | Supabase JWT verification |
-| supabase-py | auth calls from Streamlit |
-| Streamlit | UI |
-| pytest, pytest-cov, httpx | tests + coverage |
+| httpx | FastAPI → Supabase Auth REST calls (`/auth/*`) |
+| Streamlit ≥ 1.67 | UI; `st.App` for the cookie route |
+| pytest, pytest-cov | tests + coverage |
 
 `.env.example` (values from Supabase Dashboard → Project Settings → API / Database, or `supabase status` locally):
 
 ```
-SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_URL=http://127.0.0.1:64321
 SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
-DATABASE_URL=postgresql+psycopg://postgres:postgres@127.0.0.1:54322/postgres
-API_BASE_URL=http://localhost:8000
-ADMIN_EMAIL=admin@reviewradar.local
+DATABASE_URL=postgresql+psycopg://postgres:postgres@127.0.0.1:64322/postgres
+API_BASE_URL=http://127.0.0.1:8000
+SESSION_COOKIE_DAYS=7
 ```
 
-`.env` is git-ignored; only `.env.example` is committed. `SUPABASE_SECRET_KEY` and `DATABASE_URL` are used by the backend only.
+`.env` is git-ignored; only `.env.example` is committed. `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` and `DATABASE_URL` are used by the backend only; the frontend needs `API_BASE_URL` (and optionally `SESSION_COOKIE_DAYS`).
 
 ## 4. Setup steps
 
@@ -103,27 +106,37 @@ ADMIN_EMAIL=admin@reviewradar.local
 5. **Backend skeleton** – FastAPI app with `/health`, settings, DB session dependency.
 6. **Auth** – JWKS verification, `get_current_user`, `/me`. See [auth-and-roles.md](auth-and-roles.md).
 7. **Projects + roles** – project CRUD, membership endpoints, `require_permission` dependency.
-8. **Admin** – sign up the admin account, run `scripts/make_admin.py`.
-9. **Frontend** – sign in / sign up / sign out with `supabase-py`, session in `st.session_state`, projects list, members page.
-10. **Tests + CI** – unit/API tests with dependency overrides (no Supabase needed); GitHub Actions runs `pytest --cov` on every PR. Optional integration job with `supabase start`.
+8. **Frontend** – sign in / sign up / sign out through FastAPI `/auth/*`, token pair in `st.session_state`, refresh token in an HttpOnly cookie so reloads keep the session; projects list, members page.
+9. **Tests + CI** – unit/API tests with dependency overrides (no Supabase needed); GitHub Actions runs `pytest --cov` on every PR. Optional integration job with `supabase start`.
 
-Run locally:
+Run locally (Python deps are managed with [uv](https://docs.astral.sh/uv/)):
 
 ```bash
-supabase start
+supabase start -x studio,imgproxy,vector,logflare,realtime,storage-api,edge-runtime,supavisor,postgres-meta,mailpit
 ```
 
 ```bash
 supabase db reset
 ```
 
+Copy `.env.example` to `.env` and fill the keys from `supabase status -o env` (`PUBLISHABLE_KEY`, `SECRET_KEY`, `JWT_SECRET`).
+
 ```bash
-cd backend && uvicorn app.main:app --reload
+cd backend && uv run uvicorn app.main:app --reload
 ```
 
 ```bash
-cd frontend && streamlit run Home.py
+cd frontend && uv run streamlit run app.py
 ```
+
+```bash
+cd backend && uv run pytest --cov=app
+```
+
+Notes:
+- Local Supabase ports are moved to `643xx` (`supabase/config.toml`) because Windows/Hyper-V reserves the default `5432x` range on some machines (`netsh int ipv4 show excludedportrange protocol=tcp`).
+- Use `127.0.0.1`, not `localhost`, for `API_BASE_URL`: on Windows `localhost` tries IPv6 first and adds ~2 s to every API call.
+- The local Supabase CLI issues ES256 tokens, verified through JWKS like the cloud project. `SUPABASE_JWT_SECRET` is only a fallback for legacy HS256 projects.
 
 ## 5. Task breakdown (Sprint focus)
 
@@ -140,7 +153,7 @@ cd frontend && streamlit run Home.py
 | #2 Project | Streamlit projects page | Pair programming |
 | #3 Roles | `require_permission` dependency + `PERMISSIONS` map | TDD |
 | #3 Roles | Member endpoints (add by email, change role, remove) | TDD |
-| #3 Roles | Last-owner protection rule | TDD |
+| #3 Roles | Last-owner rule (no demotion; oldest member promoted when last owner leaves) | TDD |
 | #3 Roles | Streamlit members page (owner only) | Pair programming |
 
 Dependencies: #1 → #2 → #3. Every later story (import, analysis, dashboard) depends on #3's permission check.
