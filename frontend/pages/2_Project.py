@@ -1,5 +1,6 @@
 import re
 from html import escape
+from urllib.parse import urlencode
 
 import streamlit as st
 
@@ -28,6 +29,10 @@ try:
     me = ui.me()
     project = api_client.get(f"/projects/{project_id}")
     members = api_client.get(f"/projects/{project_id}/members")
+    category_filter = (st.session_state.get("cat_q") or "").strip()
+    categories = api_client.get(
+        f"/projects/{project_id}/categories" + (f"?{urlencode({'q': category_filter})}" if category_filter else "")
+    )
     can_manage = project["my_role"] == "owner"
     archived = project["archived_at"] is not None
     invitations = api_client.get(f"/projects/{project_id}/invitations") if can_manage and not archived else []
@@ -156,7 +161,7 @@ def leave_dialog() -> None:
 
 # Tabs -------------------------------------------------------------------------------
 st.space("small")
-tab_names = [f"Members  {len(members)}"]
+tab_names = [f"Members  {len(members)}", "Categories" if category_filter else f"Categories  {len(categories)}"]
 if editable:
     tab_names += [f"Invitations  {len(open_invites)}" if open_invites else "Invitations", "Settings"]
 tabs = st.tabs(tab_names)
@@ -196,8 +201,63 @@ with tabs[0]:
                             run(lambda: api_client.delete(f"/projects/{project_id}/members/{m['user_id']}"),
                                 f"Removed {display_name(m)}")
 
+DEFAULT_CATEGORY_COLOR = "#b0122b"
+
+
+def category_form(cat: dict | None = None) -> None:
+    """Create (cat is None) or edit a category. Name is required; color is optional."""
+    with st.form(f"category_{cat['id'] if cat else 'new'}", border=False):
+        name = st.text_input("Name", cat["name"] if cat else "", max_chars=80)
+        use_color = st.checkbox("Mark with a color", value=bool(cat and cat["color"]))
+        color = st.color_picker(
+            "Color", (cat and cat["color"]) or DEFAULT_CATEGORY_COLOR, label_visibility="collapsed"
+        )
+        if st.form_submit_button("Save" if cat else "Create category", type="primary", width="stretch"):
+            payload = {"name": name.strip(), "color": color if use_color else None}
+            if not payload["name"]:
+                st.warning("The category name can't be empty.")
+            elif cat:
+                run(lambda: api_client.patch(f"/projects/{project_id}/categories/{cat['id']}", payload),
+                    "Category saved")
+            else:
+                run(lambda: api_client.post(f"/projects/{project_id}/categories", payload),
+                    f"Created {payload['name']}")
+
+
+with tabs[1]:
+    find_col, new_col = st.columns([3, 1.3], vertical_alignment="center")
+    find_col.text_input(
+        "Filter categories", key="cat_q", placeholder="Filter by name", label_visibility="collapsed",
+        icon=":material/search:", max_chars=80,
+    )
+    if editable:
+        with new_col, st.popover("New category", type="primary", icon=":material/add:", width="stretch"):
+            category_form()
+    if not categories:
+        if category_filter:
+            title, hint = "No matching categories", "Try a different name."
+        elif editable:
+            title, hint = "No categories yet", "Use <b>New category</b> to group reviews your own way."
+        else:
+            title, hint = "No categories yet", "The project owner hasn't set any up."
+        st.html(f"<div class='rr-empty'><div class='rr-title'>{title}</div><div class='rr-sub'>{hint}</div></div>")
+    for c in categories:
+        with st.container(key=f"rr-row-c-{c['id']}"):
+            info, act = st.columns([6, 1.1], vertical_alignment="center")
+            dot = (f"<span style='display:inline-block;width:.8rem;height:.8rem;border-radius:50%;"
+                   f"background:{escape(c['color'])};margin-right:.65rem'></span>") if c["color"] else ""
+            info.html(f"<div class='rr-line'>{dot}<b>{escape(c['name'])}</b></div>")
+            if editable:
+                with act, st.container(horizontal=True, horizontal_alignment="right"):
+                    with st.popover("", icon=":material/edit:", help=f"Edit {c['name']}"):
+                        category_form(c)
+                        st.caption("Reviews filed under it become uncategorized if you delete it.")
+                        if st.button("Delete category", key=f"cat_del_{c['id']}", icon=":material/delete:"):
+                            run(lambda: api_client.delete(f"/projects/{project_id}/categories/{c['id']}"),
+                                f"Deleted {c['name']}")
+
 if editable:
-    with tabs[1]:
+    with tabs[2]:
         if not invitations:
             st.html("<div class='rr-empty'><div class='rr-title'>No open invitations</div>"
                     "<div class='rr-sub'>Use <b>Invite people</b> to add teammates by email.</div></div>")
@@ -217,7 +277,7 @@ if editable:
                         run(lambda: api_client.delete(f"/projects/{project_id}/invitations/{inv['id']}"),
                             f"Invitation to {inv['email']} revoked")
 
-    with tabs[2]:
+    with tabs[3]:
         with st.form("edit_project", border=False):
             name = st.text_input("Project name", project["name"], max_chars=120)
             description = st.text_area("Description", project["description"] or "", height=110)

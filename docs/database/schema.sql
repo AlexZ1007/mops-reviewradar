@@ -164,11 +164,13 @@ CREATE TRIGGER on_profile_email_changed_deliver_invitations
 CREATE TABLE categories (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     project_id      BIGINT       NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    name            VARCHAR(80)  NOT NULL,
-    color           VARCHAR(7),                      -- #RRGGBB
-    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    UNIQUE (project_id, name)
+    name            VARCHAR(80)  NOT NULL CHECK (btrim(name) <> ''),
+    color           VARCHAR(7)   CHECK (color ~ '^#[0-9a-f]{6}$'),   -- #rrggbb, lower case
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
+
+-- Names are unique per project, ignoring case.
+CREATE UNIQUE INDEX uq_categories_project_name ON categories (project_id, lower(name));
 
 -- ---------------------------------------------------------------------------
 -- Imports and reviews (FR03, FR04, FR05, FR10)
