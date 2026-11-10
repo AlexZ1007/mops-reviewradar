@@ -1,4 +1,4 @@
-"""Exact-duplicate lookup for imports (story #8 can extend this)."""
+"""Exact-duplicate lookup for imports (story #8)."""
 from collections.abc import Iterable
 
 from sqlalchemy import select
@@ -9,13 +9,14 @@ from app.models import Review
 CHUNK = 500  # keeps each IN (...) list well below the database's parameter limit
 
 
-def existing_hashes(db: Session, project_id: int, hashes: Iterable[str]) -> set[str]:
-    """Those of `hashes` that belong to a review already saved in the project."""
+def existing_review_ids(db: Session, project_id: int, hashes: Iterable[str]) -> dict[str, int]:
+    """For those of `hashes` that belong to a review already saved in the project: hash -> review id."""
     wanted = list(set(hashes))
-    found: set[str] = set()
+    found: dict[str, int] = {}
     for start in range(0, len(wanted), CHUNK):
         chunk = wanted[start : start + CHUNK]
-        found.update(
-            db.scalars(select(Review.content_hash).where(Review.project_id == project_id, Review.content_hash.in_(chunk)))
+        rows = db.execute(
+            select(Review.content_hash, Review.id).where(Review.project_id == project_id, Review.content_hash.in_(chunk))
         )
+        found.update({digest: review_id for digest, review_id in rows})
     return found

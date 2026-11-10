@@ -167,7 +167,7 @@ def test_same_reviews_can_be_imported_into_another_project(client, upload, owner
 
 def test_concurrent_duplicate_is_a_conflict_and_nothing_is_saved(upload, db, monkeypatch, client, owner, auth, project):
     client.post(f"/projects/{project['id']}/reviews", json={"content": "Great app"}, headers=auth(owner))
-    monkeypatch.setattr(import_service, "existing_hashes", lambda *a, **k: set())  # the check "missed" it
+    monkeypatch.setattr(import_service, "existing_review_ids", lambda *a, **k: {})  # the check "missed" it
     assert upload("content\nGreat app\nOther\n").status_code == 409
     assert db.scalars(select(Import)).all() == []
     assert len(db.scalars(select(Review)).all()) == 1

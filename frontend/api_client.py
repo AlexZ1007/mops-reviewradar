@@ -16,7 +16,8 @@ class ApiError(Exception):
         self.detail = detail
 
 
-def request(method: str, path: str, **kwargs):
+def request(method: str, path: str, raw: bool = False, **kwargs):
+    """`raw=True` returns the response body as bytes (for file downloads) instead of parsing JSON."""
     token = auth.access_token()
     if token is None:
         st.switch_page("Home.py")
@@ -37,6 +38,8 @@ def request(method: str, path: str, **kwargs):
         if isinstance(detail, list):  # FastAPI validation errors
             detail = "; ".join(d.get("msg", str(d)) for d in detail)
         raise ApiError(r.status_code, str(detail))
+    if raw:
+        return r.content
     return r.json() if r.content else None
 
 
@@ -50,6 +53,11 @@ def post(path: str, json: dict):
 
 def patch(path: str, json: dict):
     return request("PATCH", path, json=json)
+
+
+def download(path: str) -> bytes:
+    """GET a file (the bytes, not JSON)."""
+    return request("GET", path, raw=True)
 
 
 def upload(path: str, file_name: str, data: bytes, content_type: str = "text/csv"):

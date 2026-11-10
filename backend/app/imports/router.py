@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import ProjectContext, require_permission
 from app.db import get_db
-from app.imports import service
+from app.imports import reports, service
 from app.schemas import ImportDetailOut, ImportOut
 
 router = APIRouter(prefix="/projects/{project_id}/imports", tags=["imports"])
@@ -34,3 +34,18 @@ def get_import(
     db: Session = Depends(get_db),
 ):
     return service.get_import(db, ctx, import_id)
+
+
+@router.get("/{import_id}/errors.csv", response_class=Response)
+def download_problems(
+    import_id: int,
+    ctx: ProjectContext = Depends(require_permission("project.read")),
+    db: Session = Depends(get_db),
+):
+    """The rows that could not be imported, as a CSV file."""
+    found = service.get_import(db, ctx, import_id)
+    return Response(
+        reports.errors_csv(found.errors),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="import-{found.id}-problems.csv"'},
+    )

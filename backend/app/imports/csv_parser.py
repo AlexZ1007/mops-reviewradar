@@ -16,6 +16,7 @@ ALIASES = {
     "external_id": "external_id", "id": "external_id",
 }
 DELIMITERS = (",", ";", "\t")  # Excel in many locales (e.g. Romanian) writes ";"
+MAX_ROWS = 10_000  # the import runs inside one request
 
 
 class CsvFormatError(ValueError):
@@ -26,6 +27,7 @@ class CsvFormatError(ValueError):
 class CsvRow:
     row_number: int  # as in a spreadsheet: the header is row 1, the first review row 2
     values: dict[str, str]  # column name -> trimmed text; columns missing from a short row are left out
+    extra_cells: int = 0  # filled cells beyond the header's columns: usually an unquoted comma in the text
 
 
 def _column(header: str) -> str | None:
@@ -68,7 +70,10 @@ def parse_csv(raw: bytes) -> list[CsvRow]:
                 header = _read_header(record)
                 continue
             values = {column: cell.strip() for column, cell in zip(header, record) if column}
-            rows.append(CsvRow(row_number=number, values=values))
+            extra = sum(1 for cell in record[len(header):] if cell.strip())  # trailing empty cells do not count
+            rows.append(CsvRow(row_number=number, values=values, extra_cells=extra))
+            if len(rows) > MAX_ROWS:
+                raise CsvFormatError(f"The file has more than {MAX_ROWS:,} rows. Split it into smaller files.")
     except csv.Error as e:
         problem = "has a field that is too large" if "field larger" in str(e) else f"could not be read ({e})"
         raise CsvFormatError(f"Row {number + 1} {problem}")
