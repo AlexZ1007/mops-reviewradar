@@ -86,6 +86,7 @@ if st.session_state.pop("reset_invite", False):
     st.session_state.invite_emails = ""
 
 with right, st.container(horizontal=True, horizontal_alignment="right"):
+    st.page_link("pages/4_Reviews.py", label="Reviews", icon=":material/rate_review:")
     if editable:
         with st.popover("Invite people", type="primary", icon=":material/person_add:"):
             with st.form("invite_member", border=False):

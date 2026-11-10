@@ -52,5 +52,10 @@ def patch(path: str, json: dict):
     return request("PATCH", path, json=json)
 
 
+def upload(path: str, file_name: str, data: bytes, content_type: str = "text/csv"):
+    """POST one file as multipart form data (the form field is called `file`)."""
+    return request("POST", path, files={"file": (file_name, data, content_type)})
+
+
 def delete(path: str):
     return request("DELETE", path)

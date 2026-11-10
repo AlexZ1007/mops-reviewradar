@@ -38,6 +38,7 @@ The database is Supabase Postgres. The schema lives in plain SQL migrations in `
 | `20261106120000_drop_platform_admin.sql` | removes the platform-admin role |
 | `20261107000000_invitations_notifications.sql` | `project_invitations`, `notifications` |
 | `20261109000000_categories.sql` | `categories` (per-project, unique name ignoring case, optional `#rrggbb` color) |
+| `20261110000000_reviews_imports.sql` | `review_source` / `import_status` enums, `imports`, `import_errors`, `reviews` (unique `(project_id, content_hash)`) |
 
 **Local database** (Docker): `supabase start ...` (step 2) creates it; `supabase db reset` drops it, re-applies every migration and runs `supabase/seed.sql`. Run `supabase db reset` again whenever you pull new migrations or want a clean slate. Postgres is exposed on `127.0.0.1:64322` (`postgres` / `postgres`), so you can inspect it with `psql` or any SQL client:
 
