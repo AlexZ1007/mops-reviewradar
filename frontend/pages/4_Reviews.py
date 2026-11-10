@@ -73,8 +73,31 @@ def problems_dialog(import_id: int) -> None:
         st.error(e.detail)
         return
     problems_table(detail["errors"])
+    try:
+        report = api_client.download(f"/projects/{project_id}/imports/{import_id}/errors.csv")
+    except api_client.ApiError as e:
+        st.error(e.detail)
+    else:
+        st.download_button(
+            "Download as CSV", report, f"import-{import_id}-problems.csv", "text/csv", icon=":material/download:",
+        )
     if detail["invalid_rows"] > len({e["row_number"] for e in detail["errors"]}):
         st.caption("Only the first problems are listed. Fix these and import the file again to see the rest.")
+
+
+@st.dialog("Rows skipped as duplicates", width="large")
+def duplicates_dialog(rows: list[dict], total: int) -> None:
+    def where(d: dict) -> str:
+        if d["of_review_id"] is not None:
+            return f"Already in the project (review #{d['of_review_id']})"
+        return f"Same as row {d['of_row']} of this file"
+
+    st.dataframe(
+        [{"Row": d["row_number"], "Review": d["content"], "Why": where(d)} for d in rows],
+        hide_index=True, width="stretch",
+    )
+    if total > len(rows):
+        st.caption(f"Only the first {len(rows)} of {total} are listed.")
 
 
 def add_review_form() -> None:
@@ -140,9 +163,13 @@ if last:
         with act, st.container(horizontal=True, horizontal_alignment="right"):
             if last["invalid_rows"] and st.button("View problems", key="last_problems", type="tertiary"):
                 problems_dialog(last["id"])
+            if last.get("duplicates") and st.button("View duplicates", key="last_duplicates", type="tertiary"):
+                duplicates_dialog(last["duplicates"], last["duplicate_rows"])
             if st.button("Dismiss", key="last_dismiss", type="tertiary"):
                 del st.session_state["last_import"]
                 st.rerun()
+    if last.get("repeat_of"):
+        st.warning(f"This exact file was already imported before (import #{last['repeat_of']}).")
     if last["invalid_rows"]:
         st.caption("The valid rows were imported. Fix the others and upload the file again: reviews already in the project are skipped.")
 
@@ -205,7 +232,9 @@ with tabs["History"]:
             info, act = st.columns([5, 1.6], vertical_alignment="center")
             info.html(
                 f"<div class='rr-line'><b>{escape(i['file_name'])}</b></div>"
-                f"<div class='rr-sub'>{ui.ago(i['created_at'])} · {result_summary(i)}</div>"
+                f"<div class='rr-sub'>{ui.ago(i['created_at'])} · {result_summary(i)}"
+                + (f" · same file as import #{i['repeat_of']}" if i.get("repeat_of") else "")
+                + "</div>"
             )
             if i["invalid_rows"]:
                 with act, st.container(horizontal=True, horizontal_alignment="right"):
