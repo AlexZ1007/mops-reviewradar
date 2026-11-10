@@ -228,7 +228,18 @@ class ImportOut(BaseModel):
     invalid_rows: int
     created_at: datetime
     finished_at: datetime | None
+    repeat_of: int | None = None  # the first earlier import of this very same file, if there is one
+
+
+class ImportDuplicateOut(BaseModel):
+    """A row that was skipped because the same text already exists. Only given right after an upload."""
+
+    row_number: int
+    content: str  # shortened
+    of_review_id: int | None  # the same text was already saved as this review...
+    of_row: int | None  # ...or appears earlier in this file, at this row
 
 
 class ImportDetailOut(ImportOut):
     errors: list[ImportErrorOut]
+    duplicates: list[ImportDuplicateOut] = []
