@@ -4,7 +4,6 @@
   const stage = document.getElementById("stage");
   const slides = Array.from(stage.querySelectorAll(".slide"));
   const counter = document.getElementById("counter");
-  const chapter = document.getElementById("chapter");
   const bar = document.getElementById("bar");
   const pad = (n) => String(n).padStart(2, "0");
   let current = -1;
@@ -25,7 +24,6 @@
     current = n;
     stage.dataset.current = n;
     counter.innerHTML = `<b>${pad(n + 1)}</b> / ${pad(slides.length)}`;
-    chapter.textContent = n === 0 ? "" : slides[n].dataset.label;
     bar.style.width = `${((n + 1) / slides.length) * 100}%`;
     if (location.hash !== `#${n + 1}`) history.replaceState(null, "", `#${n + 1}`);
   }
