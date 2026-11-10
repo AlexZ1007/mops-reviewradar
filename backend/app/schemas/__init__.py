@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models import InvitationStatus, ProjectRole
+from app.models import ImportStatus, InvitationStatus, ProjectRole, ReviewSource
 
 
 class ProfileOut(BaseModel):
@@ -156,3 +156,79 @@ class NotificationOut(BaseModel):
 
 class UnreadCount(BaseModel):
     count: int
+
+
+# Reviews and imports (stories #6 and #9) ---------------------------------------------
+
+MAX_REVIEW_LENGTH = 10_000
+MAX_TEXT_FIELD = 120  # author, external_id
+
+
+def _clean_review_content(value: str) -> str:
+    value = value.strip()
+    if not value:
+        raise ValueError("Content is required")
+    return value
+
+
+def _blank_to_none(value: str | None) -> str | None:
+    value = (value or "").strip()
+    return value or None
+
+
+class ReviewCreate(BaseModel):
+    """A review typed in by hand. Only `content` is required."""
+
+    content: str = Field(max_length=MAX_REVIEW_LENGTH)
+    rating: int | None = Field(default=None, ge=1, le=5)
+    author: str | None = Field(default=None, max_length=MAX_TEXT_FIELD)
+    reviewed_at: datetime | None = None  # date of the original review
+    category_id: int | None = None
+
+    _content = field_validator("content")(_clean_review_content)
+    _author = field_validator("author")(_blank_to_none)
+
+
+class ReviewOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    project_id: int
+    import_id: int | None
+    category_id: int | None
+    created_by: uuid.UUID | None
+    source: ReviewSource
+    external_id: str | None
+    author: str | None
+    rating: int | None
+    content: str
+    reviewed_at: datetime | None
+    created_at: datetime
+
+
+class ImportErrorOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    row_number: int  # spreadsheet numbering: the header is row 1, the first review row 2
+    field: str | None
+    message: str
+
+
+class ImportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    project_id: int
+    uploaded_by: uuid.UUID | None
+    file_name: str
+    status: ImportStatus
+    total_rows: int
+    imported_rows: int
+    duplicate_rows: int
+    invalid_rows: int
+    created_at: datetime
+    finished_at: datetime | None
+
+
+class ImportDetailOut(ImportOut):
+    errors: list[ImportErrorOut]

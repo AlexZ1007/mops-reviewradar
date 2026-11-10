@@ -11,12 +11,15 @@ from sqlalchemy import (
     JSON,
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     Enum,
     ForeignKey,
     Integer,
+    SmallInteger,
     String,
     Text,
+    UniqueConstraint,
     Uuid,
     func,
 )
@@ -150,3 +153,72 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     invitation: Mapped[ProjectInvitation | None] = relationship(lazy="joined")
+
+
+class ReviewSource(str, enum.Enum):
+    csv = "csv"
+    manual = "manual"
+
+
+class ImportStatus(str, enum.Enum):
+    pending = "pending"
+    processing = "processing"
+    completed = "completed"
+    failed = "failed"
+
+
+class Import(Base):
+    """One uploaded CSV file and the outcome of processing it (story #6)."""
+
+    __tablename__ = "imports"
+
+    id: Mapped[int] = mapped_column(BigId, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(BigId, ForeignKey("projects.id", ondelete="CASCADE"))
+    uploaded_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("profiles.id", ondelete="SET NULL"))
+    file_name: Mapped[str] = mapped_column(String(255))
+    file_sha256: Mapped[str] = mapped_column(String(64))
+    status: Mapped[ImportStatus] = mapped_column(
+        Enum(ImportStatus, name="import_status", create_type=False), default=ImportStatus.pending
+    )
+    total_rows: Mapped[int] = mapped_column(Integer, default=0)
+    imported_rows: Mapped[int] = mapped_column(Integer, default=0)
+    duplicate_rows: Mapped[int] = mapped_column(Integer, default=0)
+    invalid_rows: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    errors: Mapped[list["ImportRowError"]] = relationship(order_by="ImportRowError.row_number, ImportRowError.id")
+
+
+class ImportRowError(Base):
+    """A problem found in one CSV row. (Not named ImportError: that is a Python builtin.)"""
+
+    __tablename__ = "import_errors"
+
+    id: Mapped[int] = mapped_column(BigId, primary_key=True, autoincrement=True)
+    import_id: Mapped[int] = mapped_column(BigId, ForeignKey("imports.id", ondelete="CASCADE"))
+    row_number: Mapped[int] = mapped_column(Integer)
+    field: Mapped[str | None] = mapped_column(String(80))
+    message: Mapped[str] = mapped_column(Text)
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+    __table_args__ = (
+        UniqueConstraint("project_id", "content_hash", name="uq_reviews_project_content_hash"),
+        CheckConstraint("rating BETWEEN 1 AND 5", name="ck_reviews_rating"),
+    )
+
+    id: Mapped[int] = mapped_column(BigId, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(BigId, ForeignKey("projects.id", ondelete="CASCADE"))
+    import_id: Mapped[int | None] = mapped_column(BigId, ForeignKey("imports.id", ondelete="SET NULL"))
+    category_id: Mapped[int | None] = mapped_column(BigId, ForeignKey("categories.id", ondelete="SET NULL"))
+    created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("profiles.id", ondelete="SET NULL"))
+    source: Mapped[ReviewSource] = mapped_column(Enum(ReviewSource, name="review_source", create_type=False))
+    external_id: Mapped[str | None] = mapped_column(String(120))
+    author: Mapped[str | None] = mapped_column(String(120))
+    rating: Mapped[int | None] = mapped_column(SmallInteger)
+    content: Mapped[str] = mapped_column(Text)
+    content_hash: Mapped[str] = mapped_column(String(64))  # sha256 of normalized content
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
